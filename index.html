@@ -116,19 +116,6 @@
   const map = L.map('map', { preferCanvas: true, zoomControl: true, attributionControl: false }).setView([40.25, -3.7], 6);
   const layer = L.layerGroup().addTo(map);
   const AUTO_JSON = 'audit_PRO_20260710_164731_enriched.json';
-  const DEMO_DATA = {
-    env: 'DEMO',
-    phase6: {
-      demo: {
-        entities: [
-          { uri: 'demo://alcaudete-1', name: 'Viajes Nujemar', clase: 'LocalBusiness', municipio: 'Alcaudete', provincia: 'Jaén', lat: 37.5907, lon: -4.0821 },
-          { uri: 'demo://benidorm-1', name: 'Los Gemelos', clase: 'CafeOrCoffeShop', municipio: 'Benidorm', provincia: 'Alicante', lat: 38.5411, lon: -0.1225 },
-          { uri: 'demo://barcelona-1', name: 'Barcelona Info', clase: 'TouristInformationOffice', municipio: 'Barcelona', provincia: 'Barcelona', lat: 41.3851, lon: 2.1734 },
-          { uri: 'demo://madrid-1', name: 'Madrid Central', clase: 'DestinationExperience', municipio: 'Madrid', provincia: 'Madrid', lat: 40.4168, lon: -3.7038 }
-        ]
-      }
-    }
-  };
 
   const isObject = v => v && typeof v === 'object' && !Array.isArray(v);
   const titleize = s => (s || '').toString().replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim().replace(/\b\w/g, c => c.toUpperCase());
@@ -329,11 +316,6 @@
     refresh();
   }
 
-  function loadDemo(reason) {
-    loadData(DEMO_DATA);
-    document.getElementById('fileState').textContent = reason || 'Modo demo cargado.';
-  }
-
   async function tryAutoLoad() {
     try {
       const res = await fetch(AUTO_JSON, { cache: 'no-store' });
@@ -342,7 +324,7 @@
       loadData(data);
       document.getElementById('fileState').textContent = `JSON cargado automáticamente: ${AUTO_JSON}`;
     } catch (err) {
-      loadDemo(`No se pudo cargar ${AUTO_JSON}. Se muestra un demo para que el visor no quede vacío.`);
+      document.getElementById('fileState').textContent = `No se pudo cargar ${AUTO_JSON}. Abre el proyecto desde un servidor local para permitir la carga automática.`;
     }
   }
 
@@ -366,7 +348,7 @@
       loadData(JSON.parse(await file.text()));
       document.getElementById('fileState').textContent = `JSON cargado: ${file.name}`;
     } catch (err) {
-      loadDemo('No se pudo leer el JSON. Se volvió al demo para mantener el visor visible.');
+      document.getElementById('fileState').textContent = 'No se pudo leer el JSON. Revisa que el archivo sea válido.';
     }
   });
 

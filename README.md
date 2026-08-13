@@ -17,9 +17,15 @@ Visor interactivo para explorar el JSON de auditoría de PID con mapa, filtros y
 
 ## Uso local
 
-1. Abre `index.html` en un navegador.
-2. Si el JSON enriquecido está en la misma carpeta, se cargará automáticamente.
-3. Si no, usa el selector para abrir el archivo manualmente.
+1. Sirve la carpeta con un servidor local, por ejemplo `python -m http.server 8000`.
+2. Abre `http://localhost:8000/` en el navegador.
+3. Si `audit_PRO_20260710_164731_enriched.json` está en la misma carpeta, se cargará automáticamente.
+4. Si no, usa el selector para abrir el archivo manualmente.
+
+## Importante
+
+- Si abres `index.html` con doble clic, el navegador puede bloquear la carga automática del JSON por restricciones de `file://`.
+- Para ver la carga real antes de publicar en Pages, usa siempre un servidor local.
 
 ## Notas
 
