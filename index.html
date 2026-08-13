@@ -115,6 +115,7 @@
   const state = { resources: [], filtered: [], municipality: '', province: '', clase: '' };
   const map = L.map('map', { preferCanvas: true, zoomControl: true, attributionControl: false }).setView([40.25, -3.7], 6);
   const layer = L.layerGroup().addTo(map);
+  const AUTO_JSON = 'audit_PRO_20260710_164731_enriched.json';
 
   const isObject = v => v && typeof v === 'object' && !Array.isArray(v);
   const titleize = s => (s || '').toString().replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim().replace(/\b\w/g, c => c.toUpperCase());
@@ -315,6 +316,18 @@
     refresh();
   }
 
+  async function tryAutoLoad() {
+    try {
+      const res = await fetch(AUTO_JSON, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      loadData(data);
+      document.getElementById('fileState').textContent = `JSON cargado automáticamente: ${AUTO_JSON}`;
+    } catch (err) {
+      document.getElementById('fileState').textContent = `No se pudo cargar ${AUTO_JSON}. Usa el selector para abrir el JSON manualmente.`;
+    }
+  }
+
   document.getElementById('municipioFilter').addEventListener('change', e => { state.municipality = e.target.value; refresh(); });
   document.getElementById('provinciaFilter').addEventListener('change', e => { state.province = e.target.value; refresh(); });
   document.getElementById('claseFilter').addEventListener('change', e => { state.clase = e.target.value; refresh(); });
@@ -338,6 +351,8 @@
       document.getElementById('fileState').textContent = 'No se pudo leer el JSON. Revisa que el archivo sea válido.';
     }
   });
+
+  tryAutoLoad();
 </script>
 </body>
 </html>
