@@ -115,7 +115,7 @@
   const state = { resources: [], filtered: [], municipality: '', province: '', clase: '' };
   const map = L.map('map', { preferCanvas: true, zoomControl: true, attributionControl: false }).setView([40.25, -3.7], 6);
   const layer = L.layerGroup().addTo(map);
-  const AUTO_JSON = 'audit_PRO_20260710_164731_enriched.json';
+  const AUTO_GEOJSON = 'audit_PRO_20260710_164731.geojson';
 
   const isObject = v => v && typeof v === 'object' && !Array.isArray(v);
   const titleize = s => (s || '').toString().replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim().replace(/\b\w/g, c => c.toUpperCase());
@@ -149,6 +149,19 @@
   }
 
   function collectResources(root) {
+    if (root && root.type === 'FeatureCollection' && Array.isArray(root.features)) {
+      return root.features.map((feature, idx) => {
+        const props = feature.properties || {};
+        const coords = feature.geometry && feature.geometry.type === 'Point' ? feature.geometry.coordinates : null;
+        return {
+          ...props,
+          lat: coords ? safeNum(coords[1]) : safeNum(props.lat),
+          lon: coords ? safeNum(coords[0]) : safeNum(props.lon),
+          sourcePath: `features[${idx}]`
+        };
+      }).filter(r => r.name || r.uri);
+    }
+
     const out = [];
     const seen = new WeakSet();
     function walk(node, path = '') {
@@ -318,13 +331,13 @@
 
   async function tryAutoLoad() {
     try {
-      const res = await fetch(AUTO_JSON, { cache: 'no-store' });
+      const res = await fetch(AUTO_GEOJSON, { cache: 'no-store' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       loadData(data);
-      document.getElementById('fileState').textContent = `JSON cargado automáticamente: ${AUTO_JSON}`;
+      document.getElementById('fileState').textContent = `GeoJSON cargado automáticamente: ${AUTO_GEOJSON}`;
     } catch (err) {
-      document.getElementById('fileState').textContent = `No se pudo cargar ${AUTO_JSON}. Abre el proyecto desde un servidor local para permitir la carga automática.`;
+      document.getElementById('fileState').textContent = `No se pudo cargar ${AUTO_GEOJSON}. Abre el proyecto desde un servidor local para permitir la carga automática.`;
     }
   }
 
