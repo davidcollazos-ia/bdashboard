@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PID Dashboard</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <style>
+    :root{
+      --bg:#f4efe6;--panel:rgba(255,255,255,.86);--panel2:rgba(255,255,255,.97);--text:#1f2937;--muted:#5b6472;--accent:#0f766e;--accent2:#b45309;--accent3:#7c3aed;--border:rgba(31,41,55,.12);--shadow:0 18px 50px rgba(31,41,55,.12)
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Segoe UI,Tahoma,Arial,sans-serif;color:var(--text);background:linear-gradient(180deg,#fbf8f2 0%,var(--bg) 100%);min-height:100vh}
+    .wrap{max-width:1600px;margin:0 auto;padding:20px}
+    .hero{display:grid;gap:10px;margin-bottom:14px}
+    .eyebrow{display:inline-flex;width:fit-content;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.8);border:1px solid var(--border);box-shadow:var(--shadow);color:var(--accent);font-weight:700}
+    h1{margin:0;font-size:clamp(2rem,3.2vw,3.2rem);line-height:1.05;max-width:18ch}
+    .lead{margin:0;max-width:95ch;color:var(--muted);line-height:1.65}
+    .toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:16px 0}
+    .upload,.filter{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:16px;background:var(--panel2);border:1px solid var(--border);box-shadow:var(--shadow)}
+    .pill{padding:10px 12px;border-radius:999px;background:rgba(15,118,110,.08);color:var(--accent);font-weight:700;border:1px solid rgba(15,118,110,.14)}
+    .layout{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(360px,.95fr);gap:16px;align-items:start}
+    .map-card,.side-card,.wide-card{background:var(--panel);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:22px;box-shadow:var(--shadow)}
+    .map-card{padding:14px}
+    #map{height:72vh;min-height:620px;border-radius:18px;overflow:hidden;background:linear-gradient(rgba(15,118,110,.06) 1px, transparent 1px),linear-gradient(90deg, rgba(15,118,110,.06) 1px, transparent 1px),linear-gradient(180deg, #f8fafc, #eef2f7);background-size:40px 40px,40px 40px,100% 100%}
+    .side{display:grid;gap:16px}
+    .side-card{padding:16px}
+    .wide{margin-top:16px;padding:16px}
+    .stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .stat{padding:12px;border-radius:16px;background:rgba(15,118,110,.06);border:1px solid rgba(15,118,110,.12)}
+    .stat strong{display:block;font-size:1.3rem;color:var(--accent);margin-bottom:3px}
+    .stat span{display:block;color:var(--muted);font-size:.92rem;line-height:1.35}
+    .section-title{margin:0 0 8px;font-size:1.08rem}
+    .section-sub{margin:0;color:var(--muted);line-height:1.55;font-size:.95rem}
+    .chart{margin-top:12px;display:grid;gap:10px}
+    .bar-row{display:grid;grid-template-columns:150px 1fr 56px;gap:10px;align-items:center}
+    .bar-label{font-weight:700;color:#334155;text-transform:capitalize;font-size:.92rem}
+    .bar-track{height:12px;background:rgba(31,41,55,.08);border-radius:999px;overflow:hidden}
+    .bar-fill{height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--accent),#34d399);width:0%}
+    .bar-value{text-align:right;font-weight:700;color:#475569;font-size:.92rem}
+    .pie-wrap{display:grid;grid-template-columns:190px 1fr;gap:12px;align-items:center;margin-top:10px}
+    .pie{width:180px;height:180px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.04)}
+    .legend{display:grid;gap:8px}
+    .legend-item{display:flex;align-items:center;gap:8px;color:#334155;font-size:.92rem}
+    .dot{width:12px;height:12px;border-radius:50%}
+    .table-wrap{overflow:auto;border-radius:16px;border:1px solid var(--border);margin-top:12px;background:rgba(255,255,255,.65)}
+    table{width:100%;border-collapse:collapse;min-width:780px}
+    th,td{padding:10px 12px;border-bottom:1px solid rgba(31,41,55,.08);text-align:left;vertical-align:top}
+    th{position:sticky;top:0;background:rgba(15,118,110,.06);color:#134e4a}
+    td{color:#334155;font-size:.94rem}
+    .small{color:var(--muted);font-size:.9rem}
+    .status{margin-top:10px;padding:10px 12px;border-radius:14px;background:rgba(180,83,9,.08);border:1px solid rgba(180,83,9,.14);color:#9a3412;line-height:1.5;font-size:.93rem}
+    @media (max-width:1200px){.layout{grid-template-columns:1fr}.side{grid-template-columns:1fr 1fr}.wide{grid-column:1/-1}.map-card{grid-column:1/-1} #map{height:60vh;min-height:500px}}
+    @media (max-width:760px){.side{grid-template-columns:1fr}.bar-row{grid-template-columns:1fr;gap:4px}.bar-value{text-align:left}.pie-wrap{grid-template-columns:1fr}.pie{margin:auto}.stats{grid-template-columns:1fr 1fr}}
+  </style>
+</head>
+<body>
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow">PID Dashboard</div>
+    <h1>Mapa interactivo con filtros por municipio, provincia y clase</h1>
+    <p class="lead">Carga el JSON enriquecido y el visor pintará los recursos con coordenadas reales o estimadas por municipio. Los recursos sin municipio, provincia ni coordenadas se irán a la tabla de "otros".</p>
+  </section>
+
+  <section class="toolbar">
+    <label class="upload"><strong>Cargar JSON</strong><input id="fileInput" type="file" accept=".json,application/json"></label>
+    <label class="filter">Municipio <select id="municipioFilter"><option value="">Todos</option></select></label>
+    <label class="filter">Provincia <select id="provinciaFilter"><option value="">Todas</option></select></label>
+    <label class="filter">Clase <select id="claseFilter"><option value="">Todas</option></select></label>
+    <button id="resetBtn" type="button">Limpiar filtros</button>
+    <div class="pill" id="fileState">Carga el JSON enriquecido para ver los recursos.</div>
+  </section>
+
+  <section class="layout">
+    <section class="map-card"><div id="map"></div></section>
+    <aside class="side">
+      <div class="side-card"><h2 class="section-title">Resumen del mapa</h2><p class="section-sub">Los contadores cambian con filtros y zoom.</p><div class="stats" id="stats"></div></div>
+      <div class="side-card"><h2 class="section-title">Por municipio</h2><p class="section-sub">Barras con los municipios visibles dentro del zoom actual.</p><div class="chart" id="municipioChart"></div></div>
+      <div class="side-card"><h2 class="section-title">Municipio vs otros</h2><p class="section-sub">Quesito con lo que se puede pintar en mapa y lo que queda fuera.</p><div class="pie-wrap"><div class="pie" id="pieChart"></div><div class="legend" id="pieLegend"></div></div></div>
+    </aside>
+  </section>
+
+  <section class="wide-card wide">
+    <h2 class="section-title">Recursos sin municipio, provincia ni coordenadas</h2>
+    <p class="section-sub">Estos no se pueden colocar en mapa. Se muestran aquí con su cantidad y ejemplos.</p>
+    <div class="table-wrap"><table><thead><tr><th>Grupo</th><th>Cuenta</th><th>Ejemplos</th></tr></thead><tbody id="otherRows"></tbody></table></div>
+  </section>
+
+  <section class="wide-card wide">
+    <h2 class="section-title">Listado de recursos visibles</h2>
+    <p class="section-sub">Se actualiza con filtros y zoom. Aquí verás los recursos que quedan dentro del mapa actual.</p>
+    <div class="table-wrap"><table><thead><tr><th>Nombre</th><th>Municipio</th><th>Provincia</th><th>Lat</th><th>Lon</th><th>Clase</th></tr></thead><tbody id="visibleRows"></tbody></table></div>
+  </section>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+  const COLORS = ['#0f766e','#7c3aed','#b45309','#dc2626','#2563eb','#16a34a','#ea580c','#9333ea'];
+  const fallbackGeo = {
+    "Alcaudete": { lat: 37.5907, lon: -4.0821, province: "Jaén" },
+    "Benidorm": { lat: 38.5411, lon: -0.1225, province: "Alicante" },
+    "Barcelona": { lat: 41.3851, lon: 2.1734, province: "Barcelona" },
+    "Badajoz": { lat: 38.8794, lon: -6.9707, province: "Badajoz" },
+    "Madrid": { lat: 40.4168, lon: -3.7038, province: "Madrid" },
+    "Valencia": { lat: 39.4699, lon: -0.3763, province: "Valencia" },
+    "Murcia": { lat: 37.9922, lon: -1.1307, province: "Murcia" },
+    "Sevilla": { lat: 37.3891, lon: -5.9845, province: "Sevilla" },
+    "Bilbao": { lat: 43.2630, lon: -2.9350, province: "Bizkaia" },
+    "Málaga": { lat: 36.7213, lon: -4.4214, province: "Málaga" },
+    "Gijón": { lat: 43.5322, lon: -5.6611, province: "Asturias" },
+    "Oviedo": { lat: 43.3619, lon: -5.8494, province: "Asturias" },
+    "Santander": { lat: 43.4623, lon: -3.80998, province: "Cantabria" }
+  };
+
+  const state = { resources: [], filtered: [], municipality: '', province: '', clase: '' };
+  const map = L.map('map', { preferCanvas: true, zoomControl: true, attributionControl: false }).setView([40.25, -3.7], 6);
+  const layer = L.layerGroup().addTo(map);
+
+  const isObject = v => v && typeof v === 'object' && !Array.isArray(v);
+  const titleize = s => (s || '').toString().replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim().replace(/\b\w/g, c => c.toUpperCase());
+  const safeNum = v => { const n = Number(v); return Number.isFinite(n) ? n : null; };
+
+  function inferMunicipalityFromUri(uri) {
+    const m = /datos\.segittur\.es\/([^/]+?)(?:\/resource|\/inferences|$)/.exec(uri || '');
+    if (!m) return '';
+    let slug = m[1];
+    slug = slug.replace(/^ccaa-de-/, '').replace(/^diputacion-provincial-de-/, '').replace(/^diputacion-de-/, '').replace(/^consell-insular-de-/, '').replace(/^consell-comarcal-de-/, '').replace(/^consell-comarcal-del-/, '').replace(/^mancomunidad-(integral-)?/, '').replace(/^cabildo-insular-de-/, '');
+    if (/^(federacion-espanola-de-municipios-y-provincias|federacion-aragonesa-de-municipios-comarcas-y-provincias|grupo-de-ciudades-patrimonio-de-la-humanidad-de-espana|asociacion-turistica-valle-del-aragon|spain-info|spaininfo|segittur|uteqa-1|uteqa-2|sngular|testdatasource)$/i.test(slug)) return '';
+    return titleize(slug);
+  }
+
+  function inferProvince(municipality, resource) {
+    if (resource?.provincia) return titleize(resource.provincia);
+    if (resource?.province) return titleize(resource.province);
+    if (municipality && fallbackGeo[municipality]?.province) return fallbackGeo[municipality].province;
+    const byMun = { Alcaudete: 'Jaén', Benidorm: 'Alicante', Barcelona: 'Barcelona', Badajoz: 'Badajoz', Madrid: 'Madrid', Valencia: 'Valencia', Murcia: 'Murcia', Sevilla: 'Sevilla', Bilbao: 'Bizkaia', Málaga: 'Málaga', Gijón: 'Asturias', Oviedo: 'Asturias', Santander: 'Cantabria' };
+    return byMun[municipality] || '';
+  }
+
+  function extractPostalAddress(obj) {
+    for (const k of ['direccion_postal','postalAddress','address','direccion']) {
+      if (obj && obj[k]) {
+        if (typeof obj[k] === 'string') return obj[k];
+        if (isObject(obj[k])) return obj[k].streetAddress || obj[k].address || JSON.stringify(obj[k]);
+      }
+    }
+    return '';
+  }
+
+  function collectResources(root) {
+    const out = [];
+    const seen = new WeakSet();
+    function walk(node, path = '') {
+      if (!node || typeof node !== 'object' || seen.has(node)) return;
+      seen.add(node);
+      if (Array.isArray(node)) { node.forEach(v => walk(v, path)); return; }
+      if (Array.isArray(node.entities)) {
+        node.entities.forEach((entity, idx) => walk(entity, path ? `${path}.entities[${idx}]` : `entities[${idx}]`));
+      }
+      const hasShape = ('uri' in node || 'name' in node || 'clase' in node || 'text' in node || 'eval_long' in node || 'municipio' in node || 'lat' in node || 'lon' in node);
+      if (hasShape && ('uri' in node || 'name' in node)) {
+        const municipality = node.municipio || inferMunicipalityFromUri(node.uri) || '';
+        const province = inferProvince(municipality, node);
+        const lat = safeNum(node.lat ?? node.location?.lat ?? node.geo?.lat ?? node.geometry?.coordinates?.[1]);
+        const lon = safeNum(node.lon ?? node.location?.lon ?? node.geo?.lon ?? node.geometry?.coordinates?.[0]);
+        out.push({ ...node, municipality, province, lat, lon, address: extractPostalAddress(node), sourcePath: path });
+        return;
+      }
+      for (const [k, v] of Object.entries(node)) walk(v, path ? `${path}.${k}` : k);
+    }
+    walk(root);
+    return out.filter(r => r.uri || r.name);
+  }
+
+  function centerForMunicipality(name) {
+    const pts = state.resources.filter(r => (r.municipality || '') === name && Number.isFinite(r.lat) && Number.isFinite(r.lon));
+    if (pts.length) {
+      return { lat: pts.reduce((s, p) => s + p.lat, 0) / pts.length, lon: pts.reduce((s, p) => s + p.lon, 0) / pts.length };
+    }
+    if (fallbackGeo[name]) return fallbackGeo[name];
+    const seed = (name || 'otros').split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+    return { lat: 36 + ((seed * 37) % 650) / 100, lon: -9.5 + ((seed * 53) % 1100) / 100, estimated: true };
+  }
+
+  function enrichWithCentroids(resources) {
+    const groups = new Map();
+    for (const r of resources) {
+      const key = r.municipality || 'Otros';
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(r);
+    }
+    for (const [mun, items] of groups) {
+      const center = mun !== 'Otros' ? centerForMunicipality(mun) : null;
+      if (!center) continue;
+      for (const r of items) {
+        if (!Number.isFinite(r.lat) || !Number.isFinite(r.lon)) {
+          r.lat = center.lat;
+          r.lon = center.lon;
+          r.centered = true;
+          r.estimated = !!center.estimated;
+        }
+      }
+    }
+    return resources;
+  }
+
+  const classify = r => Number.isFinite(r.lat) && Number.isFinite(r.lon) ? 'mapa' : (r.municipality || r.province ? 'centro' : 'otros');
+  const getVisibleResources = () => { const bounds = map.getBounds(); return state.filtered.filter(r => Number.isFinite(r.lat) && Number.isFinite(r.lon) && bounds.contains([r.lat, r.lon])); };
+  const paletteFor = key => COLORS[Math.abs((key || '').split('').reduce((a, c) => a + c.charCodeAt(0), 0)) % COLORS.length];
+
+  function renderMap() {
+    layer.clearLayers();
+    const visible = getVisibleResources();
+    for (const r of visible) {
+      const color = paletteFor(r.municipality || r.province || 'Otros');
+      const marker = L.circleMarker([r.lat, r.lon], { radius: 6, color, weight: 2, fillColor: color, fillOpacity: 0.85 });
+      marker.bindPopup(`<div style="min-width:220px"><strong>${r.name || 'Sin nombre'}</strong><br><span>${r.clase || ''}</span><br><span>${r.municipality || 'Otros'}${r.province ? ' · ' + r.province : ''}</span><br><span>${r.estimated ? 'Posición estimada' : 'Coordenada real'}</span><br><span class="mono">${r.lat.toFixed(5)}, ${r.lon.toFixed(5)}</span></div>`);
+      marker.addTo(layer);
+    }
+    document.getElementById('fileState').textContent = `Recursos cargados: ${state.resources.length.toLocaleString('es-ES')} | visibles en el mapa: ${visible.length.toLocaleString('es-ES')}`;
+    if (!map._backgroundHint) {
+      map._backgroundHint = L.control({ position: 'bottomleft' });
+      map._backgroundHint.onAdd = function () {
+        const div = L.DomUtil.create('div', 'small');
+        div.style.padding = '8px 10px';
+        div.style.background = 'rgba(255,255,255,.85)';
+        div.style.border = '1px solid rgba(31,41,55,.12)';
+        div.style.borderRadius = '12px';
+        div.style.boxShadow = '0 8px 20px rgba(31,41,55,.08)';
+        div.innerHTML = 'Los puntos se colocan con coordenadas reales o en una posición estimada por municipio.';
+        return div;
+      };
+      map._backgroundHint.addTo(map);
+    }
+  }
+
+  function filteredByControls() {
+    return state.resources.filter(r => (state.municipality ? (r.municipality || 'Otros') === state.municipality : true) && (state.province ? (r.province || 'Otros') === state.province : true) && (state.clase ? (r.clase || 'Otros') === state.clase : true));
+  }
+
+  function buildOptions() {
+    const munSet = new Set(state.resources.map(r => r.municipality || 'Otros'));
+    const provSet = new Set(state.resources.map(r => r.province || 'Otros'));
+    const classSet = new Set(state.resources.map(r => r.clase || 'Otros'));
+    document.getElementById('municipioFilter').innerHTML = '<option value="">Todos</option>' + [...munSet].sort().map(v => `<option value="${v}">${v}</option>`).join('');
+    document.getElementById('provinciaFilter').innerHTML = '<option value="">Todas</option>' + [...provSet].sort().map(v => `<option value="${v}">${v}</option>`).join('');
+    document.getElementById('claseFilter').innerHTML = '<option value="">Todas</option>' + [...classSet].sort().map(v => `<option value="${v}">${v}</option>`).join('');
+  }
+
+  function drawBarChart(el, items, emptyText = 'Sin datos') {
+    if (!items.length) { el.innerHTML = `<div class="small">${emptyText}</div>`; return; }
+    const max = Math.max(...items.map(i => i.count), 1);
+    el.innerHTML = items.map(item => `<div class="bar-row"><div class="bar-label">${item.name}</div><div class="bar-track"><div class="bar-fill" style="width:${(item.count / max) * 100}%"></div></div><div class="bar-value">${item.count.toLocaleString('es-ES')}</div></div>`).join('');
+  }
+
+  function drawPie(el, a, b) {
+    const total = a + b || 1;
+    el.style.background = `conic-gradient(var(--accent) 0 ${(a / total) * 360}deg, #e5e7eb ${(a / total) * 360}deg 360deg)`;
+  }
+
+  function updateOtherTable(resources) {
+    const groups = new Map();
+    for (const r of resources) {
+      if (classify(r) !== 'otros') continue;
+      const key = !r.municipality && !r.province && !Number.isFinite(r.lat) && !Number.isFinite(r.lon) ? 'Sin municipio, provincia ni coordenadas' : 'Datos incompletos';
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(r);
+    }
+    document.getElementById('otherRows').innerHTML = [...groups.entries()].map(([group, items]) => `<tr><td>${group}</td><td>${items.length.toLocaleString('es-ES')}</td><td>${items.slice(0, 5).map(x => x.name || x.uri || 'Sin nombre').join('<br>')}</td></tr>`).join('') || `<tr><td colspan="3">No hay recursos en esta categoría.</td></tr>`;
+  }
+
+  function updateVisibleTable(resources) {
+    document.getElementById('visibleRows').innerHTML = resources.slice(0, 250).map(r => `<tr><td>${r.name || ''}${r.centered ? ' <span class="small">(centro)</span>' : ''}${r.estimated ? ' <span class="small">(estimado)</span>' : ''}</td><td>${r.municipality || 'Otros'}</td><td>${r.province || 'Otros'}</td><td>${r.lat.toFixed(5)}</td><td>${r.lon.toFixed(5)}</td><td>${r.clase || ''}</td></tr>`).join('') || `<tr><td colspan="6">No hay recursos visibles en este zoom/filtro.</td></tr>`;
+  }
+
+  function updateStats(resources) {
+    const mapPoints = resources.filter(r => classify(r) !== 'otros');
+    const others = resources.length - mapPoints.length;
+    const provinceCount = new Set(resources.map(r => r.province || 'Otros')).size;
+    const municipalCount = new Set(resources.map(r => r.municipality || 'Otros')).size;
+    document.getElementById('stats').innerHTML = [
+      { v: resources.length, l: 'Recursos filtrados' },
+      { v: mapPoints.length, l: 'Con mapa/centro' },
+      { v: others, l: 'Otros sin mapa' },
+      { v: `${municipalCount}/${provinceCount}`, l: 'Municipios / provincias' }
+    ].map(s => `<div class="stat"><strong>${s.v}</strong><span>${s.l}</span></div>`).join('');
+    const byMun = {};
+    for (const r of resources) { const k = r.municipality || 'Otros'; byMun[k] = (byMun[k] || 0) + 1; }
+    drawBarChart(document.getElementById('municipioChart'), Object.entries(byMun).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([name, count]) => ({ name, count })), 'Sin municipios en el filtro actual');
+    drawPie(document.getElementById('pieChart'), mapPoints.length, others);
+    document.getElementById('pieLegend').innerHTML = `<div class="legend-item"><span class="dot" style="background:var(--accent)"></span>En mapa o centro: ${mapPoints.length.toLocaleString('es-ES')}</div><div class="legend-item"><span class="dot" style="background:#e5e7eb"></span>Otros: ${others.toLocaleString('es-ES')}</div>`;
+  }
+
+  function refresh() {
+    state.filtered = enrichWithCentroids(filteredByControls().map(r => ({ ...r })));
+    updateStats(state.filtered);
+    renderMap();
+    updateOtherTable(state.filtered);
+    updateVisibleTable(getVisibleResources());
+  }
+
+  function openInitial() {
+    const pts = state.resources.filter(r => Number.isFinite(r.lat) && Number.isFinite(r.lon));
+    if (pts.length) {
+      const bounds = L.latLngBounds(pts.map(p => [p.lat, p.lon]));
+      map.fitBounds(bounds.pad(0.15));
+    }
+  }
+
+  function loadData(data) {
+    state.resources = enrichWithCentroids(collectResources(data));
+    buildOptions();
+    state.filtered = state.resources.slice();
+    openInitial();
+    refresh();
+  }
+
+  document.getElementById('municipioFilter').addEventListener('change', e => { state.municipality = e.target.value; refresh(); });
+  document.getElementById('provinciaFilter').addEventListener('change', e => { state.province = e.target.value; refresh(); });
+  document.getElementById('claseFilter').addEventListener('change', e => { state.clase = e.target.value; refresh(); });
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    state.municipality = '';
+    state.province = '';
+    state.clase = '';
+    document.getElementById('municipioFilter').value = '';
+    document.getElementById('provinciaFilter').value = '';
+    document.getElementById('claseFilter').value = '';
+    refresh();
+  });
+  map.on('moveend zoomend', refresh);
+  document.getElementById('fileInput').addEventListener('change', async e => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      loadData(JSON.parse(await file.text()));
+      document.getElementById('fileState').textContent = `JSON cargado: ${file.name}`;
+    } catch (err) {
+      document.getElementById('fileState').textContent = 'No se pudo leer el JSON. Revisa que el archivo sea válido.';
+    }
+  });
+</script>
+</body>
+</html>
