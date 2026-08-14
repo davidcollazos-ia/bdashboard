@@ -378,24 +378,15 @@
       map.getPane(name).style.zIndex = zIndex;
     }
 
-    function bringLayerToOrder(def){
-      if (!def.layer) return;
-      if (def.kind === 'points') {
-        if (def.visible && !map.hasLayer(def.layer)) def.layer.addTo(map);
-        return;
-      }
-      if (map.hasLayer(def.layer)) map.removeLayer(def.layer);
-      if (def.visible) {
-        def.layer.addTo(map);
-      }
-    }
-
     function refreshLayerOrder(){
       const visibleDefs = layerState.items.filter(d => d.visible && d.layer);
       visibleDefs.forEach((def, idx) => {
+        const zIndex = 410 + idx;
         const pane = map.getPane(def.pane);
-        if (pane) pane.style.zIndex = 410 + idx;
-        if (def.layer.setZIndex) def.layer.setZIndex(410 + idx);
+        if (pane) pane.style.zIndex = zIndex;
+        if (def.layer.setZIndex) def.layer.setZIndex(zIndex);
+        if (def.layer.bringToFront && idx === visibleDefs.length - 1) def.layer.bringToFront();
+        if (def.layer.bringToBack && idx === 0) def.layer.bringToBack();
       });
     }
 
