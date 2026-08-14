@@ -1,34 +1,27 @@
 # PID Dashboard
 
-Visor interactivo para explorar el GeoJSON de auditoría de PID con mapa, filtros y paneles de resumen.
+Visor interactivo para explorar el seguimiento de PID convertido a GeoJSON.
 
 ## Qué hace
 
-- Carga automáticamente `audit_PRO_20260710_164731.geojson` si el archivo está junto al `index.html`.
-- Permite cargar manualmente un GeoJSON o un JSON enriquecido desde el navegador.
+- Carga automáticamente `seguimiento_PRO_20260727_123406.geojson` si está junto al `index.html`.
+- Permite cargar manualmente un GeoJSON desde el navegador.
 - Muestra un mapa con recursos geolocalizados.
 - Filtra por `municipio`, `provincia` y `clase`.
-- Separa los recursos sin municipio, provincia ni coordenadas en una tabla de "otros".
+- Actualiza los paneles de resumen según filtros y zoom.
 
-## Archivos esperados
+## Archivos principales
 
 - `index.html`
-- `audit_PRO_20260710_164731.geojson`
+- `seguimiento_PRO_20260727_123406.geojson`
 
 ## Uso local
 
 1. Sirve la carpeta con un servidor local, por ejemplo `python -m http.server 8000`.
 2. Abre `http://localhost:8000/` en el navegador.
-3. Si `audit_PRO_20260710_164731.geojson` está en la misma carpeta, se cargará automáticamente.
-4. Si no, usa el selector para abrir el archivo manualmente.
+3. Si `seguimiento_PRO_20260727_123406.geojson` está en la misma carpeta, se cargará automáticamente.
+4. Si no, usa el selector para abrir otro GeoJSON manualmente.
 
-## Importante
+## Nota
 
-- Si abres `index.html` con doble clic, el navegador puede bloquear la carga automática por restricciones de `file://`.
-- Para ver la carga real antes de publicar en Pages, usa siempre un servidor local.
-
-## Notas
-
-- El mapa usa Leaflet.
-- El GeoJSON concentra la geometría en `geometry` y deja el resto de campos en `properties`.
-- Los puntos sin datos geográficos suficientes se muestran en la tabla de "otros".
+- El mapa usa Leaflet y el GeoJSON está preparado para trabajarlo mejor en visores GIS.

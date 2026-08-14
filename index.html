@@ -1,376 +1,535 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PID Dashboard</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
   <style>
     :root{
-      --bg:#f4efe6;--panel:rgba(255,255,255,.86);--panel2:rgba(255,255,255,.97);--text:#1f2937;--muted:#5b6472;--accent:#0f766e;--accent2:#b45309;--accent3:#7c3aed;--border:rgba(31,41,55,.12);--shadow:0 18px 50px rgba(31,41,55,.12)
+      --bg:#f7f0f8;
+      --bg-2:#ece0ef;
+      --panel:rgba(255,251,255,.94);
+      --panel-strong:rgba(255,255,255,.98);
+      --ink:#231b2e;
+      --muted:#6d5f7d;
+      --brand:#8f3a7f;
+      --brand-2:#c13d83;
+      --brand-3:#6d2f69;
+      --brand-4:#4e3763;
+      --line:rgba(31,41,51,.11);
+      --shadow:0 18px 50px rgba(31,41,51,.11);
+      --shadow-soft:0 10px 26px rgba(31,41,51,.07);
+      --radius-lg:22px;
+      --radius-md:16px;
     }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:Segoe UI,Tahoma,Arial,sans-serif;color:var(--text);background:linear-gradient(180deg,#fbf8f2 0%,var(--bg) 100%);min-height:100vh}
-    .wrap{max-width:1600px;margin:0 auto;padding:20px}
-    .hero{display:grid;gap:10px;margin-bottom:14px}
-    .eyebrow{display:inline-flex;width:fit-content;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.8);border:1px solid var(--border);box-shadow:var(--shadow);color:var(--accent);font-weight:700}
-    h1{margin:0;font-size:clamp(2rem,3.2vw,3.2rem);line-height:1.05;max-width:18ch}
-    .lead{margin:0;max-width:95ch;color:var(--muted);line-height:1.65}
-    .toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:16px 0}
-    .upload,.filter{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:16px;background:var(--panel2);border:1px solid var(--border);box-shadow:var(--shadow)}
-    .pill{padding:10px 12px;border-radius:999px;background:rgba(15,118,110,.08);color:var(--accent);font-weight:700;border:1px solid rgba(15,118,110,.14)}
-    .layout{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(360px,.95fr);gap:16px;align-items:start}
-    .map-card,.side-card,.wide-card{background:var(--panel);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:22px;box-shadow:var(--shadow)}
-    .map-card{padding:14px}
-    #map{height:72vh;min-height:620px;border-radius:18px;overflow:hidden;background:linear-gradient(rgba(15,118,110,.06) 1px, transparent 1px),linear-gradient(90deg, rgba(15,118,110,.06) 1px, transparent 1px),linear-gradient(180deg, #f8fafc, #eef2f7);background-size:40px 40px,40px 40px,100% 100%}
-    .side{display:grid;gap:16px}
-    .side-card{padding:16px}
-    .wide{margin-top:16px;padding:16px}
-    .stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-    .stat{padding:12px;border-radius:16px;background:rgba(15,118,110,.06);border:1px solid rgba(15,118,110,.12)}
-    .stat strong{display:block;font-size:1.3rem;color:var(--accent);margin-bottom:3px}
-    .stat span{display:block;color:var(--muted);font-size:.92rem;line-height:1.35}
-    .section-title{margin:0 0 8px;font-size:1.08rem}
-    .section-sub{margin:0;color:var(--muted);line-height:1.55;font-size:.95rem}
-    .chart{margin-top:12px;display:grid;gap:10px}
-    .bar-row{display:grid;grid-template-columns:150px 1fr 56px;gap:10px;align-items:center}
-    .bar-label{font-weight:700;color:#334155;text-transform:capitalize;font-size:.92rem}
-    .bar-track{height:12px;background:rgba(31,41,55,.08);border-radius:999px;overflow:hidden}
-    .bar-fill{height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--accent),#34d399);width:0%}
-    .bar-value{text-align:right;font-weight:700;color:#475569;font-size:.92rem}
-    .pie-wrap{display:grid;grid-template-columns:190px 1fr;gap:12px;align-items:center;margin-top:10px}
-    .pie{width:180px;height:180px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.04)}
-    .legend{display:grid;gap:8px}
-    .legend-item{display:flex;align-items:center;gap:8px;color:#334155;font-size:.92rem}
-    .dot{width:12px;height:12px;border-radius:50%}
-    .table-wrap{overflow:auto;border-radius:16px;border:1px solid var(--border);margin-top:12px;background:rgba(255,255,255,.65)}
-    table{width:100%;border-collapse:collapse;min-width:780px}
-    th,td{padding:10px 12px;border-bottom:1px solid rgba(31,41,55,.08);text-align:left;vertical-align:top}
-    th{position:sticky;top:0;background:rgba(15,118,110,.06);color:#134e4a}
-    td{color:#334155;font-size:.94rem}
-    .small{color:var(--muted);font-size:.9rem}
-    .status{margin-top:10px;padding:10px 12px;border-radius:14px;background:rgba(180,83,9,.08);border:1px solid rgba(180,83,9,.14);color:#9a3412;line-height:1.5;font-size:.93rem}
-    @media (max-width:1200px){.layout{grid-template-columns:1fr}.side{grid-template-columns:1fr 1fr}.wide{grid-column:1/-1}.map-card{grid-column:1/-1} #map{height:60vh;min-height:500px}}
-    @media (max-width:760px){.side{grid-template-columns:1fr}.bar-row{grid-template-columns:1fr;gap:4px}.bar-value{text-align:left}.pie-wrap{grid-template-columns:1fr}.pie{margin:auto}.stats{grid-template-columns:1fr 1fr}}
+    html,body{margin:0;height:100%;font-family:'Manrope',Segoe UI,Tahoma,Arial,sans-serif;background:
+      radial-gradient(circle at top left, rgba(193,61,131,.12), transparent 34%),
+      radial-gradient(circle at top right, rgba(143,58,127,.10), transparent 30%),
+      linear-gradient(180deg,#fbf8f1 0%,var(--bg) 100%);
+      color:var(--ink);overflow:hidden}
+    #map{position:fixed;left:390px;right:390px;top:0;bottom:0;z-index:1}
+    .panel{position:absolute;top:16px;z-index:1000;width:360px;background:var(--panel-strong);border-radius:var(--radius-lg);box-shadow:var(--shadow);overflow:hidden;border:1px solid var(--line);backdrop-filter:blur(12px)}
+    .sidebar{left:16px;max-height:calc(100vh - 32px);display:flex;flex-direction:column}
+    .insightbar{right:16px;height:calc(100vh - 32px);display:flex;flex-direction:column;overflow-y:auto !important;overflow-x:hidden;overscroll-behavior:contain;scrollbar-gutter:stable}
+    .hero{padding:18px;background:
+      linear-gradient(135deg, #5f2b7a 0%, #8f3a7f 45%, #c13d83 100%);
+      color:#fff;position:relative;overflow:hidden}
+    .hero::before{content:'';position:absolute;inset:14px 14px auto auto;width:78px;height:78px;border-radius:50%;background:rgba(255,255,255,.08)}
+    .hero::after{content:'';position:absolute;inset:auto -30% -70% 50%;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.10);filter:blur(2px)}
+    .hero h1{margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-size:28px;line-height:.94;letter-spacing:.01em}
+    .hero p{margin:10px 0 0;font-size:12px;opacity:.9;line-height:1.45;max-width:30ch}
+    .topbar{position:fixed;left:50%;top:16px;transform:translateX(-50%);z-index:1200;width:auto;max-width:min(860px,calc(100vw - 820px));display:flex;justify-content:center;pointer-events:auto}
+    .filterbar{display:inline-flex;gap:8px;align-items:center;flex-wrap:nowrap;justify-content:flex-start;width:auto;background:rgba(255,251,255,.88);border:1px solid var(--line);border-radius:18px;padding:7px 8px;box-shadow:var(--shadow-soft);backdrop-filter:blur(14px)}
+    .select-wrap{display:inline-flex;align-items:center;gap:6px}
+    .select-wrap label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+    .select-wrap select{min-width:150px;border:1px solid var(--line);background:#fffdf9;border-radius:10px;padding:7px 9px;font:inherit;color:var(--ink);box-shadow:inset 0 1px 0 rgba(255,255,255,.6);line-height:1.15}
+    .select-wrap select:focus,.clear-filters:focus,.layer-item input:focus,.chart-scope:focus{outline:2px solid rgba(193,61,131,.2);outline-offset:2px}
+    .clear-filters{border:1px solid rgba(193,61,131,.18);background:rgba(193,61,131,.08);color:var(--brand);border-radius:10px;padding:7px 10px;font:inherit;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;line-height:1.15}
+    @media (max-width: 980px){.topbar{max-width:calc(100vw - 24px)}.filterbar{flex-wrap:wrap;justify-content:flex-start}.select-wrap select{min-width:160px}}
+    .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:14px 18px;border-bottom:1px solid var(--line)}
+    .stat{background:linear-gradient(180deg,#fffdf9,#f7f2e9);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+    .stat .n{font-size:18px;font-weight:800;color:var(--brand-2)}
+    .stat .l{font-size:11px;color:var(--muted)}
+    .filters{padding:12px 14px 16px;overflow:auto}
+    .block{border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-bottom:12px;background:#fffdf9;box-shadow:0 8px 20px rgba(31,41,55,.04)}
+    .block h2{margin:0;padding:12px 14px;font-size:13px;color:var(--ink);background:linear-gradient(180deg,#fbf7fb,#f2e7f3);border-bottom:1px solid var(--line);font-weight:800;letter-spacing:.01em}
+    .block .content{padding:12px 14px;max-height:190px;overflow:auto}
+    .block.capas .content{max-height:none;overflow:visible}
+    .actions{display:flex;gap:10px;margin-bottom:10px;font-size:11px}
+    .actions button{background:none;border:none;color:var(--brand);cursor:pointer;font-weight:800;padding:0}
+    .filter-item,.layer-item{display:flex;align-items:center;gap:8px;margin:0 0 8px;font-size:12px;color:#334155;cursor:pointer}
+    .filter-item input{accent-color:var(--brand-2)} .layer-item input{accent-color:var(--brand)}
+    .insights{padding:14px;display:flex;flex-direction:column;gap:12px;flex:0 0 auto;min-height:0}
+    .card{border:1px solid var(--line);border-radius:16px;background:#fffdf9;overflow:hidden;box-shadow:0 8px 20px rgba(31,41,55,.04)}
+    .card-header{padding:11px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer;background:linear-gradient(180deg,#fbf7fb,#f2e7f3);border-bottom:1px solid var(--line)}
+    .card-header h3{margin:0;font-size:13px;color:var(--ink);font-weight:800;letter-spacing:.01em}
+    .card-title-wrap{display:flex;align-items:center;gap:8px;min-width:0;flex:1}
+    .card-toggle{font-size:0;color:transparent;line-height:1;display:flex;align-items:center;justify-content:center;width:18px;height:18px;flex:0 0 auto}
+    .card-toggle::before{content:'⌄';font-size:18px;line-height:1;color:var(--muted);transform:translateY(-1px);transition:transform .15s ease, color .15s ease}
+    .card:not(.collapsed) .card-toggle::before{content:'⌃';transform:translateY(1px)}
+    .card-header:hover .card-toggle::before{color:var(--brand)}
+    .card-body{padding:12px;overflow:visible}
+    .card.collapsed .card-body{display:none}
+    .card-mode{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);white-space:nowrap;user-select:none;flex:0 0 auto}
+    .card-mode input{accent-color:var(--brand)}
+    .spark{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+    .bar-row{display:grid;grid-template-columns:1fr 54px;gap:8px;align-items:center}
+    .bar-track{height:12px;background:#ece4d8;border-radius:999px;overflow:hidden}
+    .bar-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--brand),#c13d83,#f59e0b)}
+    .bar-label{font-size:11px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .bar-value{font-size:11px;color:var(--muted);text-align:right}
+    .dual-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .chip{display:inline-block;padding:3px 8px;border-radius:999px;background:rgba(193,61,131,.08);color:var(--brand);font-size:10px;font-weight:800;margin:0 6px 6px 0;border:1px solid rgba(193,61,131,.14)}
+    .mini-summary{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.45}
+    .donut-wrap{display:flex;gap:14px;align-items:flex-start;flex-wrap:nowrap}
+    .donut{width:96px;height:96px;border-radius:50%;position:relative;flex:0 0 auto;background:conic-gradient(#e7c9df 0 100%)}
+    .donut::after{content:'';position:absolute;inset:20px;background:#fffdf9;border-radius:50%;box-shadow:inset 0 0 0 1px var(--line)}
+    .donut-center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:1;font-size:16px;font-weight:800;color:var(--brand-2)}
+    .donut-legend{font-size:11px;color:#334155;line-height:1.45;display:flex;flex-direction:column;gap:4px;overflow:visible;min-width:150px;padding-right:4px}
+    .legend-item{display:flex;align-items:center;gap:6px;justify-content:space-between;padding:4px 6px;border:1px solid #ebd9e5;border-radius:10px;background:#fffdfd}
+    .legend-left{display:flex;align-items:center;gap:6px;min-width:0}
+    .legend-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .legend-value{font-weight:800;color:var(--ink)}
+    .legend-swatch{width:10px;height:10px;border-radius:999px;display:inline-block;flex:0 0 auto}
+    .bottom-strip{padding:12px 14px 16px;border-top:1px solid var(--line);background:linear-gradient(180deg,#fffdfd,#f7eef6)}
+    .bottom-strip h4{margin:0 0 8px;font-size:12px;color:var(--ink);font-weight:800;letter-spacing:.02em}
+    .bottom-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .bottom-stat{background:#fffdf9;border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+    .bottom-stat .n{font-size:16px;font-weight:800;color:var(--brand-2)}
+    .bottom-stat .l{font-size:11px;color:var(--muted)}
+    .popup{min-width:320px;max-width:380px}
+    .popup h3{margin:0 0 8px;font-size:15px;color:var(--brand-2)}
+    .meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px;color:#334155}
+    .meta div{background:#fffdfd;border:1px solid var(--line);border-radius:10px;padding:8px}
+    .meta b{display:block;font-size:10px;color:var(--muted);margin-bottom:2px;text-transform:uppercase;letter-spacing:.04em}
+    @media (max-width:1100px){.panel{width:320px}#map{left:340px;right:340px}.bottom-grid{grid-template-columns:1fr}}
+    @media (max-width:900px){html,body{overflow:auto}#map{position:relative;left:0;right:0;height:52vh}.panel{position:relative;left:auto;right:auto;top:auto;width:auto;max-height:none;margin:12px 12px 0}}
   </style>
 </head>
 <body>
-<main class="wrap">
-  <section class="hero">
-    <div class="eyebrow">PID Dashboard</div>
-    <h1>Mapa interactivo con filtros por municipio, provincia y clase</h1>
-    <p class="lead">Carga el JSON enriquecido y el visor pintará los recursos con coordenadas reales o estimadas por municipio. Los recursos sin municipio, provincia ni coordenadas se irán a la tabla de "otros".</p>
-  </section>
+  <div class="panel sidebar">
+    <div class="hero">
+      <h1>PID Dashboard</h1>
+      <p>Polígonos municipales y puntos clusterizados en una sola vista.</p>
+    </div>
+    <div class="stats" id="stats"></div>
+    <div class="filters">
+      <div class="block capas">
+        <h2>Capas del mapa</h2>
+        <div class="content">
+          <label class="layer-item"><input type="checkbox" id="layerMunicipios" checked> Municipios con join espacial</label>
+          <div class="mini-summary">Rampa cálida aplicada a los polígonos según `total_puntos`.</div>
+          <div class="donut-legend" id="legendMunicipios" style="margin-bottom:10px"></div>
+          <label class="layer-item"><input type="checkbox" id="layerPuntos" checked> GeoJSON de puntos</label>
+          <div class="mini-summary">Clusters con escala de color por densidad de puntos.</div>
+          <div class="donut-legend" id="legendPuntos"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  <section class="toolbar">
-    <label class="upload"><strong>Cargar JSON</strong><input id="fileInput" type="file" accept=".json,application/json"></label>
-    <label class="filter">Municipio <select id="municipioFilter"><option value="">Todos</option></select></label>
-    <label class="filter">Provincia <select id="provinciaFilter"><option value="">Todas</option></select></label>
-    <label class="filter">Clase <select id="claseFilter"><option value="">Todas</option></select></label>
-    <button id="resetBtn" type="button">Limpiar filtros</button>
-    <div class="pill" id="fileState">Carga el JSON enriquecido para ver los recursos.</div>
-  </section>
+  <div id="map"></div>
+  <div class="topbar">
+      <div class="filterbar">
+        <div class="select-wrap">
+          <label for="provinceSelect">Provincia</label>
+          <select id="provinceSelect">
+            <option value="">Todas</option>
+        </select>
+      </div>
+        <div class="select-wrap">
+          <label for="municipalitySelect">Municipio</label>
+          <select id="municipalitySelect" disabled>
+            <option value="">Selecciona provincia</option>
+          </select>
+        </div>
+        <button class="clear-filters" id="clearFiltersBtn" type="button">Limpiar filtro</button>
+      </div>
+    </div>
 
-  <section class="layout">
-    <section class="map-card"><div id="map"></div></section>
-    <aside class="side">
-      <div class="side-card"><h2 class="section-title">Resumen del mapa</h2><p class="section-sub">Los contadores cambian con filtros y zoom.</p><div class="stats" id="stats"></div></div>
-      <div class="side-card"><h2 class="section-title">Por municipio</h2><p class="section-sub">Barras con los municipios visibles dentro del zoom actual.</p><div class="chart" id="municipioChart"></div></div>
-      <div class="side-card"><h2 class="section-title">Municipio vs otros</h2><p class="section-sub">Quesito con lo que se puede pintar en mapa y lo que queda fuera.</p><div class="pie-wrap"><div class="pie" id="pieChart"></div><div class="legend" id="pieLegend"></div></div></div>
-    </aside>
-  </section>
+  <div class="panel insightbar">
+    <div class="hero">
+      <h1>Panel de gráficos</h1>
+      <p>Se recalcula con lo que queda dentro del encuadre actual.</p>
+    </div>
+    <div class="insights">
+      <div class="card collapsed" id="cardDiag">
+        <div class="card-header" onclick="toggleCard('cardDiag')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Total y capa</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="diag" checked> Vista</label></div>
+        <div class="card-body">
+          <div class="donut-wrap">
+            <div class="donut" id="chartMaturity"><div class="donut-center" id="maturityCenter">0</div></div>
+            <div class="donut-legend" id="summaryMaturity"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card collapsed" id="cardTypes">
+        <div class="card-header" onclick="toggleCard('cardTypes')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Categorías</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="types" checked> Vista</label></div>
+        <div class="card-body">
+          <div class="spark" id="chartTypes"></div>
+          <div class="mini-summary" id="summaryTypes"></div>
+        </div>
+      </div>
+      <div class="card collapsed" id="cardPois">
+        <div class="card-header" onclick="toggleCard('cardPois')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>POIs por categoría</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="pois" checked> Vista</label></div>
+        <div class="card-body"><div class="spark" id="chartPois"></div><div class="mini-summary" id="summaryPois"></div></div>
+      </div>
+      <div class="card collapsed" id="cardCountries">
+        <div class="card-header" onclick="toggleCard('cardCountries')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Municipios top</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="countries" checked> Vista</label></div>
+        <div class="card-body"><div class="spark" id="chartCountries"></div><div class="mini-summary" id="summaryCountries"></div><div id="provinceChips" style="margin-top:8px"></div></div>
+      </div>
+      <div class="card collapsed" id="cardDiagnosis2">
+        <div class="card-header" onclick="toggleCard('cardDiagnosis2')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Diversidad</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="diagnosis2" checked> Vista</label></div>
+        <div class="card-body"><div class="spark" id="chartDiagnosis2"></div><div class="mini-summary" id="summaryDiagnosis2"></div></div>
+      </div>
+    </div>
+    <div class="bottom-strip">
+      <h4>Indicadores</h4>
+      <div class="bottom-grid">
+        <div class="bottom-stat"><div class="n" id="extraVisiblePct">0%</div><div class="l">cobertura visible</div></div>
+        <div class="bottom-stat"><div class="n" id="extraCountries">0</div><div class="l">municipios visibles</div></div>
+        <div class="bottom-stat"><div class="n" id="extraProvinces">0</div><div class="l">provincias visibles</div></div>
+      </div>
+    </div>
+  </div>
 
-  <section class="wide-card wide">
-    <h2 class="section-title">Recursos sin municipio, provincia ni coordenadas</h2>
-    <p class="section-sub">Estos no se pueden colocar en mapa. Se muestran aquí con su cantidad y ejemplos.</p>
-    <div class="table-wrap"><table><thead><tr><th>Grupo</th><th>Cuenta</th><th>Ejemplos</th></tr></thead><tbody id="otherRows"></tbody></table></div>
-  </section>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <script>
+    const map = L.map('map', { zoomControl:false }).setView([40.2, -3.7], 5);
+    L.control.zoom({ position:'bottomright' }).addTo(map);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution:'&copy; OpenStreetMap &copy; CARTO', maxZoom:20 }).addTo(map);
 
-  <section class="wide-card wide">
-    <h2 class="section-title">Listado de recursos visibles</h2>
-    <p class="section-sub">Se actualiza con filtros y zoom. Aquí verás los recursos que quedan dentro del mapa actual.</p>
-    <div class="table-wrap"><table><thead><tr><th>Nombre</th><th>Municipio</th><th>Provincia</th><th>Lat</th><th>Lon</th><th>Clase</th></tr></thead><tbody id="visibleRows"></tbody></table></div>
-  </section>
-</main>
+    const cluster = L.markerClusterGroup({
+      spiderfyOnMaxZoom:true, showCoverageOnHover:false, zoomToBoundsOnClick:true,
+      iconCreateFunction: c => L.divIcon({
+        html:`<div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:${clusterColor(c.getChildCount())};border:2px solid rgba(15,23,42,.14);color:#fff;font-weight:700;box-shadow:0 8px 18px rgba(15,23,42,.15)">${c.getChildCount()}</div>`,
+        className:'cluster-icon', iconSize:[40,40]
+      })
+    });
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-<script>
-  const COLORS = ['#0f766e','#7c3aed','#b45309','#dc2626','#2563eb','#16a34a','#ea580c','#9333ea'];
-  const fallbackGeo = {
-    "Alcaudete": { lat: 37.5907, lon: -4.0821, province: "Jaén" },
-    "Benidorm": { lat: 38.5411, lon: -0.1225, province: "Alicante" },
-    "Barcelona": { lat: 41.3851, lon: 2.1734, province: "Barcelona" },
-    "Badajoz": { lat: 38.8794, lon: -6.9707, province: "Badajoz" },
-    "Madrid": { lat: 40.4168, lon: -3.7038, province: "Madrid" },
-    "Valencia": { lat: 39.4699, lon: -0.3763, province: "Valencia" },
-    "Murcia": { lat: 37.9922, lon: -1.1307, province: "Murcia" },
-    "Sevilla": { lat: 37.3891, lon: -5.9845, province: "Sevilla" },
-    "Bilbao": { lat: 43.2630, lon: -2.9350, province: "Bizkaia" },
-    "Málaga": { lat: 36.7213, lon: -4.4214, province: "Málaga" },
-    "Gijón": { lat: 43.5322, lon: -5.6611, province: "Asturias" },
-    "Oviedo": { lat: 43.3619, lon: -5.8494, province: "Asturias" },
-    "Santander": { lat: 43.4623, lon: -3.80998, province: "Cantabria" }
-  };
+    const state = { points: [], municipios: [], province:'', municipality:'' };
+    const geoLayers = { municipios:null, puntos:cluster };
+    const esc = v => (v || '').toString().trim().replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+    const uniqueSorted = arr => Array.from(new Set(arr.filter(Boolean))).sort((a,b)=>a.localeCompare(b,'es'));
+    const countBy = (items, key) => items.reduce((acc, it) => { const k = (it[key] || 'Sin dato').toString().trim(); acc[k] = (acc[k] || 0) + 1; return acc; }, {});
+    const inBounds = dest => map.getBounds().contains([dest.lat, dest.lng]);
 
-  const state = { resources: [], filtered: [], municipality: '', province: '', clase: '' };
-  const map = L.map('map', { preferCanvas: true, zoomControl: true }).setView([40.25, -3.7], 6);
-  const layer = L.layerGroup().addTo(map);
-  const AUTO_GEOJSON = 'audit_PRO_20260710_164731.geojson';
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    subdomains: 'abcd',
-    maxZoom: 20,
-    attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
-  }).addTo(map);
+    const normalizeText = v => (v == null ? '' : String(v).trim());
+    const firstNonEmpty = (...values) => values.map(normalizeText).find(Boolean) || '';
+    const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+    const colorRamp = [
+      '#f7e6f2',
+      '#f2d3ea',
+      '#ebb8dd',
+      '#de91c7',
+      '#c96aad',
+      '#b14a91',
+      '#9a3c82',
+      '#7a2f67'
+    ];
+    const chartPalette = ['#8f3a7f', '#c13d83', '#b14a91', '#de91c7', '#6d2f69', '#a85aa1'];
 
-  const isObject = v => v && typeof v === 'object' && !Array.isArray(v);
-  const titleize = s => (s || '').toString().replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim().replace(/\b\w/g, c => c.toUpperCase());
-  const safeNum = v => { const n = Number(v); return Number.isFinite(n) ? n : null; };
-
-  function inferMunicipalityFromUri(uri) {
-    const m = /datos\.segittur\.es\/([^/]+?)(?:\/resource|\/inferences|$)/.exec(uri || '');
-    if (!m) return '';
-    let slug = m[1];
-    slug = slug.replace(/^ccaa-de-/, '').replace(/^diputacion-provincial-de-/, '').replace(/^diputacion-de-/, '').replace(/^consell-insular-de-/, '').replace(/^consell-comarcal-de-/, '').replace(/^consell-comarcal-del-/, '').replace(/^mancomunidad-(integral-)?/, '').replace(/^cabildo-insular-de-/, '');
-    if (/^(federacion-espanola-de-municipios-y-provincias|federacion-aragonesa-de-municipios-comarcas-y-provincias|grupo-de-ciudades-patrimonio-de-la-humanidad-de-espana|asociacion-turistica-valle-del-aragon|spain-info|spaininfo|segittur|uteqa-1|uteqa-2|sngular|testdatasource)$/i.test(slug)) return '';
-    return titleize(slug);
-  }
-
-  function inferProvince(municipality, resource) {
-    if (resource?.provincia) return titleize(resource.provincia);
-    if (resource?.province) return titleize(resource.province);
-    if (municipality && fallbackGeo[municipality]?.province) return fallbackGeo[municipality].province;
-    const byMun = { Alcaudete: 'Jaén', Benidorm: 'Alicante', Barcelona: 'Barcelona', Badajoz: 'Badajoz', Madrid: 'Madrid', Valencia: 'Valencia', Murcia: 'Murcia', Sevilla: 'Sevilla', Bilbao: 'Bizkaia', Málaga: 'Málaga', Gijón: 'Asturias', Oviedo: 'Asturias', Santander: 'Cantabria' };
-    return byMun[municipality] || '';
-  }
-
-  function extractPostalAddress(obj) {
-    for (const k of ['direccion_postal','postalAddress','address','direccion']) {
-      if (obj && obj[k]) {
-        if (typeof obj[k] === 'string') return obj[k];
-        if (isObject(obj[k])) return obj[k].streetAddress || obj[k].address || JSON.stringify(obj[k]);
-      }
+    function clusterColor(count){
+      if (count >= 100) return '#5f1f56';
+      if (count >= 50) return '#7a2f67';
+      if (count >= 25) return '#8f3a7f';
+      if (count >= 10) return '#b14a91';
+      if (count >= 5) return '#c96aad';
+      return '#de91c7';
     }
-    return '';
-  }
 
-  function collectResources(root) {
-    if (root && root.type === 'FeatureCollection' && Array.isArray(root.features)) {
-      return root.features.map((feature, idx) => {
-        const props = feature.properties || {};
-        const coords = feature.geometry && feature.geometry.type === 'Point' ? feature.geometry.coordinates : null;
+    function polygonFill(total){
+      if (!total || total <= 0) {
+        return { fillColor:'#cbd5e1', fillOpacity:0.06, opacity:0.22, color:'#94a3b8' };
+      }
+      const idx = clamp(Math.floor(Math.log10(total + 1) * 2), 0, colorRamp.length - 1);
+      return { fillColor: colorRamp[idx], fillOpacity: 0.6, opacity: 0.8, color: '#9a3412' };
+    }
+
+    function renderLayerLegend(){
+      const munLegend = [
+        { label: '0 puntos', color: '#e7ddea', note: 'Municipio sin contenido' },
+        { label: '1-2 puntos', color: colorRamp[0], note: 'Muy bajo' },
+        { label: '3-4 puntos', color: colorRamp[1], note: 'Bajo' },
+        { label: '5-9 puntos', color: colorRamp[3], note: 'Medio' },
+        { label: '10-24 puntos', color: colorRamp[4], note: 'Alto' },
+        { label: '25+ puntos', color: colorRamp[7], note: 'Muy alto' }
+      ];
+      const clusterLegend = [
+        { label: '1-4 puntos', color: clusterColor(1), note: 'Cluster pequeño' },
+        { label: '5-9 puntos', color: clusterColor(5), note: 'Cluster bajo' },
+        { label: '10-24 puntos', color: clusterColor(10), note: 'Cluster medio' },
+        { label: '25-49 puntos', color: clusterColor(25), note: 'Cluster alto' },
+        { label: '50-99 puntos', color: clusterColor(50), note: 'Cluster muy alto' },
+        { label: '100+ puntos', color: clusterColor(100), note: 'Cluster masivo' }
+      ];
+      document.getElementById('legendMunicipios').innerHTML = [
+        '<div class="legend-item"><div class="legend-left"><span class="legend-swatch" style="background:#8f3a7f"></span><span class="legend-label"><strong>Municipios</strong></span></div><span class="legend-value">Rampa magenta</span></div>',
+        ...munLegend.map(i => `<div class="legend-item"><div class="legend-left"><span class="legend-swatch" style="background:${i.color}"></span><span class="legend-label">${esc(i.label)}</span></div><span class="legend-value">${esc(i.note)}</span></div>`)
+      ].join('');
+      document.getElementById('legendPuntos').innerHTML = [
+        '<div class="legend-item"><div class="legend-left"><span class="legend-swatch" style="background:#c13d83"></span><span class="legend-label"><strong>Clusters</strong></span></div><span class="legend-value">Escala de densidad</span></div>',
+        ...clusterLegend.map(i => `<div class="legend-item"><div class="legend-left"><span class="legend-swatch" style="background:${i.color}"></span><span class="legend-label">${esc(i.label)}</span></div><span class="legend-value">${esc(i.note)}</span></div>`)
+      ].join('');
+    }
+
+    function collectPoints(root){
+      if (!root || root.type !== 'FeatureCollection' || !Array.isArray(root.features)) return [];
+      return root.features.map(feature => {
+        const p = feature.properties || {};
+        const c = feature.geometry && feature.geometry.type === 'Point' ? feature.geometry.coordinates : null;
         return {
-          ...props,
-          lat: coords ? safeNum(coords[1]) : safeNum(props.lat),
-          lon: coords ? safeNum(coords[0]) : safeNum(props.lon),
-          sourcePath: `features[${idx}]`
+          title: firstNonEmpty(p.name, p.title, p.uri?.split('/').pop()) || 'Sin nombre',
+          municipio: firstNonEmpty(p.dti, p.municipio, p.municipality) || 'Otros',
+          provincia: firstNonEmpty(p.province, p.provincia) || 'Otros',
+          clase: firstNonEmpty(p.class, p.clase) || 'Otros',
+          lat: Array.isArray(c) ? Number(c[1]) : null,
+          lng: Array.isArray(c) ? Number(c[0]) : null,
+          uri: firstNonEmpty(p.uri),
+          source_file: firstNonEmpty(p.source_file),
+          name: firstNonEmpty(p.name, p.title)
         };
-      }).filter(r => r.name || r.uri);
+      }).filter(d => Number.isFinite(d.lat) && Number.isFinite(d.lng));
     }
 
-    const out = [];
-    const seen = new WeakSet();
-    function walk(node, path = '') {
-      if (!node || typeof node !== 'object' || seen.has(node)) return;
-      seen.add(node);
-      if (Array.isArray(node)) { node.forEach(v => walk(v, path)); return; }
-      if (Array.isArray(node.entities)) {
-        node.entities.forEach((entity, idx) => walk(entity, path ? `${path}.entities[${idx}]` : `entities[${idx}]`));
+    function normalizeKey(value){
+      return (value || '')
+        .toString()
+        .trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, ' ');
+    }
+
+    function enrichPointsWithProvince(points, municipios){
+      const lookup = new Map();
+      municipios.forEach(feature => {
+        const p = feature.properties || {};
+        const name = firstNonEmpty(p.n_mun, p.nombreria, p.name, p.municipio);
+        const province = firstNonEmpty(p.province, p.provincia, p.n_prov);
+        if (name && province) lookup.set(normalizeKey(name), province);
+      });
+      return points.map(point => {
+        const key = normalizeKey(point.municipio);
+        return {
+          ...point,
+          provincia: lookup.get(key) || point.provincia || 'Sin provincia'
+        };
+      });
+    }
+
+    function popupFor(d){
+      return `<div class="popup"><h3>${esc(d.title)}</h3><div class="meta"><div><b>Municipio</b>${esc(d.municipio)}</div><div><b>Provincia</b>${esc(d.provincia)}</div><div><b>Clase</b>${esc(d.clase)}</div><div><b>URI</b>${esc(d.uri || 'N/D')}</div></div></div>`;
+    }
+
+    function municipalityStyle(feature){
+      const total = Number(feature?.properties?.total_puntos || 0);
+      return { weight:1, ...polygonFill(total) };
+    }
+
+    function municipalityPopup(feature, layer){
+      const p = feature.properties || {};
+      layer.bindPopup(`<div class="popup"><h3>${esc(p.n_mun || 'Municipio')}</h3><div class="meta"><div><b>INE</b>${esc(p.c_ine || 'N/D')}</div><div><b>Total puntos</b>${esc(p.total_puntos ?? 'N/D')}</div><div><b>Provincia</b>${esc(p.n_prov || 'N/D')}</div><div><b>CCAA</b>${esc(p.n_auton || 'N/D')}</div></div></div>`, { maxWidth:420 });
+    }
+
+    function fillChecks(containerId, items, type){
+      const el = document.getElementById(containerId);
+      el.innerHTML = '';
+      items.forEach(item => {
+        const label = document.createElement('label');
+        label.className = 'filter-item';
+        label.innerHTML = `<input type="checkbox" checked value="${esc(item)}" onchange="toggleFilter('${type}', this)"> ${esc(item)}`;
+        el.appendChild(label);
+      });
+    }
+
+    function renderFilters(){
+      const provinces = uniqueSorted(state.points.map(d => d.provincia));
+      const municipalities = uniqueSorted(
+        state.points
+          .filter(d => !state.province || d.provincia === state.province)
+          .map(d => d.municipio)
+      );
+      const provinceSelect = document.getElementById('provinceSelect');
+      const municipalitySelect = document.getElementById('municipalitySelect');
+      provinceSelect.innerHTML = '<option value="">Todas</option>' + provinces.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('');
+      municipalitySelect.innerHTML = (state.province
+        ? '<option value="">Todos</option>' + municipalities.map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join('')
+        : '<option value="">Selecciona provincia</option>');
+      provinceSelect.value = state.province;
+      municipalitySelect.value = state.municipality;
+      municipalitySelect.disabled = !state.province;
+      if (state.municipality && !municipalities.includes(state.municipality)) {
+        state.municipality = '';
+        municipalitySelect.value = '';
       }
-      const hasShape = ('uri' in node || 'name' in node || 'clase' in node || 'text' in node || 'eval_long' in node || 'municipio' in node || 'lat' in node || 'lon' in node);
-      if (hasShape && ('uri' in node || 'name' in node)) {
-        const municipality = node.municipio || inferMunicipalityFromUri(node.uri) || '';
-        const province = inferProvince(municipality, node);
-        const lat = safeNum(node.lat ?? node.location?.lat ?? node.geo?.lat ?? node.geometry?.coordinates?.[1]);
-        const lon = safeNum(node.lon ?? node.location?.lon ?? node.geo?.lon ?? node.geometry?.coordinates?.[0]);
-        out.push({ ...node, municipality, province, lat, lon, address: extractPostalAddress(node), sourcePath: path });
-        return;
+    }
+
+    function passes(d){
+      return (!state.province || d.provincia === state.province) && (!state.municipality || d.municipio === state.municipality);
+    }
+
+    function setStats(visible){
+      document.getElementById('stats').innerHTML = `
+        <div class="stat"><div class="n">${state.points.length}</div><div class="l">puntos</div></div>
+        <div class="stat"><div class="n">${visible}</div><div class="l">visibles</div></div>
+        <div class="stat"><div class="n">${state.municipios.length}</div><div class="l">municipios</div></div>
+        <div class="stat"><div class="n">${uniqueSorted(state.points.map(d => d.provincia)).length}</div><div class="l">provincias</div></div>
+      `;
+    }
+
+    function bars(targetId, entries, palette){
+      const el = document.getElementById(targetId);
+      el.innerHTML = '';
+      const max = Math.max(...entries.map(e => e[1]), 1);
+      entries.slice(0, 6).forEach(([label, value], idx) => {
+        const row = document.createElement('div');
+        row.className = 'bar-row';
+        row.innerHTML = `<div><div class="bar-label" title="${esc(label)}">${esc(label)}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.max(2, (value / max) * 100)}%;background:linear-gradient(90deg, ${palette[idx % palette.length]}, rgba(193,61,131,.45))"></div></div></div><div class="bar-value">${value}</div>`;
+        el.appendChild(row);
+      });
+      if (!entries.length) el.innerHTML = '<div style="font-size:12px;color:#64748b">Sin datos</div>';
+    }
+
+    function chartScope(chartId){
+      const cb = document.querySelector(`.chart-scope[data-chart="${chartId}"]`);
+      return cb ? cb.checked : true;
+    }
+
+    function renderInsights(visiblePoints){
+      const scopePoints = chartScope('types') ? visiblePoints : state.points;
+      const scopePois = chartScope('pois') ? visiblePoints : state.points;
+      const scopeMun = chartScope('countries') ? visiblePoints : state.points;
+      const scopeDiversidad = chartScope('diagnosis2') ? visiblePoints : state.points;
+      const byClass = countBy(scopePoints, 'clase');
+      const poisByClass = Object.entries(countBy(scopePois, 'clase')).map(([k, v]) => [k.replace(/^core#/, ''), v]).sort((a,b)=>b[1]-a[1]);
+      const byProvince = Object.entries(countBy(scopeMun, 'provincia')).sort((a,b)=>b[1]-a[1]).slice(0,8);
+      const muniTotals = state.municipios.map(f => [f?.properties?.n_mun || 'Sin nombre', Number(f?.properties?.total_puntos || 0)]).sort((a,b)=>b[1]-a[1]).slice(0,8);
+      const muniVariety = Object.entries(scopeDiversidad.reduce((acc, d) => { (acc[d.municipio] ||= new Set()).add(d.clase); return acc; }, {})).map(([k,v]) => [k, v.size]).sort((a,b)=>b[1]-a[1]).slice(0,8);
+      const totalMun = state.municipios.reduce((sum, f) => sum + Number(f?.properties?.total_puntos || 0), 0);
+      const scopeLabel = chartScope('types') ? 'vista' : 'total';
+
+      const classEntries = Object.entries(byClass)
+        .map(([k, v]) => [k.replace(/^core#/, ''), v])
+        .sort((a,b)=>b[1]-a[1]);
+      bars('chartTypes', classEntries, chartPalette);
+      bars('chartPois', poisByClass, chartPalette.slice().reverse());
+      bars('chartCountries', muniTotals, chartPalette);
+      bars('chartDiagnosis2', muniVariety, [chartPalette[2], chartPalette[0], chartPalette[1], chartPalette[3], chartPalette[4], chartPalette[5]]);
+
+      document.getElementById('maturityCenter').textContent = `${visiblePoints.length}`;
+      document.getElementById('summaryMaturity').innerHTML = `
+        <div class="legend-item"><div class="legend-left"><span class="legend-swatch" style="background:#8f3a7f"></span><span class="legend-label">Puntos en ${scopeLabel}</span></div><span class="legend-value">${visiblePoints.length}</span></div>
+        <div class="legend-item"><div class="legend-left"><span class="legend-swatch" style="background:#c13d83"></span><span class="legend-label">Municipios totales</span></div><span class="legend-value">${state.municipios.length}</span></div>
+      `;
+      document.getElementById('summaryTypes').innerHTML = classEntries.slice(0,3).map(([k,v]) => `<span class="chip">${esc(k)}: ${v}</span>`).join('') || 'Sin datos';
+      document.getElementById('summaryPois').innerHTML = poisByClass.slice(0,3).map(([k,v]) => `<span class="chip">${esc(k)}: ${v}</span>`).join('') || 'Sin datos';
+      document.getElementById('summaryCountries').innerHTML = muniTotals.slice(0,3).map(([k,v]) => `<span class="chip">${esc(k)}: ${v}</span>`).join('') || 'Sin datos';
+      document.getElementById('summaryDiagnosis2').innerHTML = `<strong>${totalMun}</strong> puntos agregados en municipios y <strong>${visiblePoints.length}</strong> visibles en el mapa.`;
+      document.getElementById('provinceChips').innerHTML = byProvince.map(([name, value]) => `<span class="chip">${esc(name)}: ${value}</span>`).join('') || '<div style="font-size:12px;color:#64748b">Sin datos</div>';
+      document.getElementById('extraVisiblePct').textContent = `${Math.round((visiblePoints.length / state.points.length) * 100)}%`;
+      document.getElementById('extraCountries').textContent = uniqueSorted(visiblePoints.map(d => d.municipio)).length;
+      document.getElementById('extraProvinces').textContent = uniqueSorted(visiblePoints.map(d => d.provincia)).length;
+    }
+
+    function renderDashboard(){
+      const filtered = state.points.filter(passes);
+      const inView = filtered.filter(inBounds);
+      renderInsights(inView.length ? inView : filtered);
+    }
+
+    function renderMarkers(){
+      cluster.clearLayers();
+      const visible = state.points.filter(passes);
+      visible.forEach(d => {
+        const marker = L.circleMarker([d.lat, d.lng], { radius:5, color:'#0b5cab', weight:2, fillColor:'#14b8a6', fillOpacity:.85 }).bindPopup(popupFor(d), { maxWidth:420 });
+        cluster.addLayer(marker);
+      });
+      setStats(visible.length);
+      renderDashboard();
+      if (visible.length){
+        const fg = L.latLngBounds(visible.map(d => [d.lat, d.lng]));
+        map.fitBounds(fg.pad(0.08));
       }
-      for (const [k, v] of Object.entries(node)) walk(v, path ? `${path}.${k}` : k);
     }
-    walk(root);
-    return out.filter(r => r.uri || r.name);
-  }
 
-  function centerForMunicipality(name) {
-    const pts = state.resources.filter(r => (r.municipality || '') === name && Number.isFinite(r.lat) && Number.isFinite(r.lon));
-    if (pts.length) {
-      return { lat: pts.reduce((s, p) => s + p.lat, 0) / pts.length, lon: pts.reduce((s, p) => s + p.lon, 0) / pts.length };
-    }
-    if (fallbackGeo[name]) return fallbackGeo[name];
-    const seed = (name || 'otros').split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-    return { lat: 36 + ((seed * 37) % 650) / 100, lon: -9.5 + ((seed * 53) % 1100) / 100, estimated: true };
-  }
+    function toggleFilter(type, cb){}
 
-  function enrichWithCentroids(resources) {
-    const groups = new Map();
-    for (const r of resources) {
-      const key = r.municipality || 'Otros';
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key).push(r);
+    function bulkSelect(type, checked){}
+
+    function toggleCard(id){
+      const card = document.getElementById(id);
+      const collapsed = card.classList.toggle('collapsed');
     }
-    for (const [mun, items] of groups) {
-      const center = mun !== 'Otros' ? centerForMunicipality(mun) : null;
-      if (!center) continue;
-      for (const r of items) {
-        if (!Number.isFinite(r.lat) || !Number.isFinite(r.lon)) {
-          r.lat = center.lat;
-          r.lon = center.lon;
-          r.centered = true;
-          r.estimated = !!center.estimated;
-        }
+
+    function refreshGeoLayers(){
+      const showMun = document.getElementById('layerMunicipios').checked;
+      const showPts = document.getElementById('layerPuntos').checked;
+      if (geoLayers.municipios) {
+        if (showMun && !map.hasLayer(geoLayers.municipios)) geoLayers.municipios.addTo(map);
+        if (!showMun && map.hasLayer(geoLayers.municipios)) map.removeLayer(geoLayers.municipios);
       }
+      if (showPts && !map.hasLayer(cluster)) cluster.addTo(map);
+      if (!showPts && map.hasLayer(cluster)) map.removeLayer(cluster);
     }
-    return resources;
-  }
 
-  const classify = r => Number.isFinite(r.lat) && Number.isFinite(r.lon) ? 'mapa' : (r.municipality || r.province ? 'centro' : 'otros');
-  const getVisibleResources = () => { const bounds = map.getBounds(); return state.filtered.filter(r => Number.isFinite(r.lat) && Number.isFinite(r.lon) && bounds.contains([r.lat, r.lon])); };
-  const paletteFor = key => COLORS[Math.abs((key || '').split('').reduce((a, c) => a + c.charCodeAt(0), 0)) % COLORS.length];
-
-  function renderMap() {
-    layer.clearLayers();
-    const visible = getVisibleResources();
-    for (const r of visible) {
-      const color = paletteFor(r.municipality || r.province || 'Otros');
-      const marker = L.circleMarker([r.lat, r.lon], { radius: 6, color, weight: 2, fillColor: color, fillOpacity: 0.85 });
-      marker.bindPopup(`<div style="min-width:220px"><strong>${r.name || 'Sin nombre'}</strong><br><span>${r.clase || ''}</span><br><span>${r.municipality || 'Otros'}${r.province ? ' · ' + r.province : ''}</span><br><span>${r.estimated ? 'Posición estimada' : 'Coordenada real'}</span><br><span class="mono">${r.lat.toFixed(5)}, ${r.lon.toFixed(5)}</span></div>`);
-      marker.addTo(layer);
+    async function loadBaseLayers(){
+      const [munResp, ptsResp] = await Promise.all([
+        fetch('./municipios_puntos_join.geojson', { cache:'no-store' }),
+        fetch('./seguimiento_PRO_20260727_123406.geojson', { cache:'no-store' })
+      ]);
+      if (!munResp.ok) throw new Error(`Municipios HTTP ${munResp.status}`);
+      if (!ptsResp.ok) throw new Error(`Puntos HTTP ${ptsResp.status}`);
+      const munData = await munResp.json();
+      const ptsData = await ptsResp.json();
+      state.municipios = Array.isArray(munData.features) ? munData.features : [];
+      state.points = enrichPointsWithProvince(collectPoints(ptsData), state.municipios);
+      geoLayers.municipios = L.geoJSON(munData, { style: municipalityStyle, onEachFeature: municipalityPopup });
+      geoLayers.municipios.addTo(map);
+      refreshGeoLayers();
+      renderFilters();
+      renderMarkers();
+      const bounds = L.latLngBounds(state.points.map(d => [d.lat, d.lng]));
+      if (bounds.isValid()) map.fitBounds(bounds.pad(0.08));
     }
-    document.getElementById('fileState').textContent = `Recursos cargados: ${state.resources.length.toLocaleString('es-ES')} | visibles en el mapa: ${visible.length.toLocaleString('es-ES')}`;
-    if (!map._backgroundHint) {
-      map._backgroundHint = L.control({ position: 'bottomleft' });
-      map._backgroundHint.onAdd = function () {
-        const div = L.DomUtil.create('div', 'small');
-        div.style.padding = '8px 10px';
-        div.style.background = 'rgba(255,255,255,.85)';
-        div.style.border = '1px solid rgba(31,41,55,.12)';
-        div.style.borderRadius = '12px';
-        div.style.boxShadow = '0 8px 20px rgba(31,41,55,.08)';
-        div.innerHTML = 'Los puntos se colocan con coordenadas reales o en una posición estimada por municipio.';
-        return div;
-      };
-      map._backgroundHint.addTo(map);
-    }
-  }
 
-  function filteredByControls() {
-    return state.resources.filter(r => (state.municipality ? (r.municipality || 'Otros') === state.municipality : true) && (state.province ? (r.province || 'Otros') === state.province : true) && (state.clase ? (r.clase || 'Otros') === state.clase : true));
-  }
+    loadBaseLayers().catch(err => {
+      console.error(err);
+      document.getElementById('maturityCenter').textContent = 'ERR';
+    });
 
-  function buildOptions() {
-    const munSet = new Set(state.resources.map(r => r.municipality || 'Otros'));
-    const provSet = new Set(state.resources.map(r => r.province || 'Otros'));
-    const classSet = new Set(state.resources.map(r => r.clase || 'Otros'));
-    document.getElementById('municipioFilter').innerHTML = '<option value="">Todos</option>' + [...munSet].sort().map(v => `<option value="${v}">${v}</option>`).join('');
-    document.getElementById('provinciaFilter').innerHTML = '<option value="">Todas</option>' + [...provSet].sort().map(v => `<option value="${v}">${v}</option>`).join('');
-    document.getElementById('claseFilter').innerHTML = '<option value="">Todas</option>' + [...classSet].sort().map(v => `<option value="${v}">${v}</option>`).join('');
-  }
+    renderLayerLegend();
 
-  function drawBarChart(el, items, emptyText = 'Sin datos') {
-    if (!items.length) { el.innerHTML = `<div class="small">${emptyText}</div>`; return; }
-    const max = Math.max(...items.map(i => i.count), 1);
-    el.innerHTML = items.map(item => `<div class="bar-row"><div class="bar-label">${item.name}</div><div class="bar-track"><div class="bar-fill" style="width:${(item.count / max) * 100}%"></div></div><div class="bar-value">${item.count.toLocaleString('es-ES')}</div></div>`).join('');
-  }
-
-  function drawPie(el, a, b) {
-    const total = a + b || 1;
-    el.style.background = `conic-gradient(var(--accent) 0 ${(a / total) * 360}deg, #e5e7eb ${(a / total) * 360}deg 360deg)`;
-  }
-
-  function updateOtherTable(resources) {
-    const groups = new Map();
-    for (const r of resources) {
-      if (classify(r) !== 'otros') continue;
-      const key = !r.municipality && !r.province && !Number.isFinite(r.lat) && !Number.isFinite(r.lon) ? 'Sin municipio, provincia ni coordenadas' : 'Datos incompletos';
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key).push(r);
-    }
-    document.getElementById('otherRows').innerHTML = [...groups.entries()].map(([group, items]) => `<tr><td>${group}</td><td>${items.length.toLocaleString('es-ES')}</td><td>${items.slice(0, 5).map(x => x.name || x.uri || 'Sin nombre').join('<br>')}</td></tr>`).join('') || `<tr><td colspan="3">No hay recursos en esta categoría.</td></tr>`;
-  }
-
-  function updateVisibleTable(resources) {
-    document.getElementById('visibleRows').innerHTML = resources.slice(0, 250).map(r => `<tr><td>${r.name || ''}${r.centered ? ' <span class="small">(centro)</span>' : ''}${r.estimated ? ' <span class="small">(estimado)</span>' : ''}</td><td>${r.municipality || 'Otros'}</td><td>${r.province || 'Otros'}</td><td>${r.lat.toFixed(5)}</td><td>${r.lon.toFixed(5)}</td><td>${r.clase || ''}</td></tr>`).join('') || `<tr><td colspan="6">No hay recursos visibles en este zoom/filtro.</td></tr>`;
-  }
-
-  function updateStats(resources) {
-    const mapPoints = resources.filter(r => classify(r) !== 'otros');
-    const others = resources.length - mapPoints.length;
-    const provinceCount = new Set(resources.map(r => r.province || 'Otros')).size;
-    const municipalCount = new Set(resources.map(r => r.municipality || 'Otros')).size;
-    document.getElementById('stats').innerHTML = [
-      { v: resources.length, l: 'Recursos filtrados' },
-      { v: mapPoints.length, l: 'Con mapa/centro' },
-      { v: others, l: 'Otros sin mapa' },
-      { v: `${municipalCount}/${provinceCount}`, l: 'Municipios / provincias' }
-    ].map(s => `<div class="stat"><strong>${s.v}</strong><span>${s.l}</span></div>`).join('');
-    const byMun = {};
-    for (const r of resources) { const k = r.municipality || 'Otros'; byMun[k] = (byMun[k] || 0) + 1; }
-    drawBarChart(document.getElementById('municipioChart'), Object.entries(byMun).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([name, count]) => ({ name, count })), 'Sin municipios en el filtro actual');
-    drawPie(document.getElementById('pieChart'), mapPoints.length, others);
-    document.getElementById('pieLegend').innerHTML = `<div class="legend-item"><span class="dot" style="background:var(--accent)"></span>En mapa o centro: ${mapPoints.length.toLocaleString('es-ES')}</div><div class="legend-item"><span class="dot" style="background:#e5e7eb"></span>Otros: ${others.toLocaleString('es-ES')}</div>`;
-  }
-
-  function refresh() {
-    state.filtered = enrichWithCentroids(filteredByControls().map(r => ({ ...r })));
-    updateStats(state.filtered);
-    renderMap();
-    updateOtherTable(state.filtered);
-    updateVisibleTable(getVisibleResources());
-  }
-
-  function openInitial() {
-    const pts = state.resources.filter(r => Number.isFinite(r.lat) && Number.isFinite(r.lon));
-    if (pts.length) {
-      const bounds = L.latLngBounds(pts.map(p => [p.lat, p.lon]));
-      map.fitBounds(bounds.pad(0.15));
-    }
-  }
-
-  function loadData(data) {
-    state.resources = enrichWithCentroids(collectResources(data));
-    buildOptions();
-    state.filtered = state.resources.slice();
-    openInitial();
-    refresh();
-  }
-
-  async function tryAutoLoad() {
-    try {
-      const res = await fetch(AUTO_GEOJSON, { cache: 'no-store' });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      loadData(data);
-      document.getElementById('fileState').textContent = `GeoJSON cargado automáticamente: ${AUTO_GEOJSON}`;
-    } catch (err) {
-      document.getElementById('fileState').textContent = `No se pudo cargar ${AUTO_GEOJSON}. Abre el proyecto desde un servidor local para permitir la carga automática.`;
-    }
-  }
-
-  document.getElementById('municipioFilter').addEventListener('change', e => { state.municipality = e.target.value; refresh(); });
-  document.getElementById('provinciaFilter').addEventListener('change', e => { state.province = e.target.value; refresh(); });
-  document.getElementById('claseFilter').addEventListener('change', e => { state.clase = e.target.value; refresh(); });
-  document.getElementById('resetBtn').addEventListener('click', () => {
-    state.municipality = '';
-    state.province = '';
-    state.clase = '';
-    document.getElementById('municipioFilter').value = '';
-    document.getElementById('provinciaFilter').value = '';
-    document.getElementById('claseFilter').value = '';
-    refresh();
-  });
-  map.on('moveend zoomend', refresh);
-  document.getElementById('fileInput').addEventListener('change', async e => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      loadData(JSON.parse(await file.text()));
-      document.getElementById('fileState').textContent = `JSON cargado: ${file.name}`;
-    } catch (err) {
-      document.getElementById('fileState').textContent = 'No se pudo leer el JSON. Revisa que el archivo sea válido.';
-    }
-  });
-
-  tryAutoLoad();
-</script>
+    map.on('zoomend moveend', renderDashboard);
+    document.getElementById('layerMunicipios').addEventListener('change', refreshGeoLayers);
+    document.getElementById('layerPuntos').addEventListener('change', refreshGeoLayers);
+    document.getElementById('provinceSelect').addEventListener('change', e => {
+      state.province = e.target.value;
+      state.municipality = '';
+      renderFilters();
+      renderMarkers();
+    });
+    document.getElementById('municipalitySelect').addEventListener('change', e => {
+      state.municipality = e.target.value;
+      renderMarkers();
+    });
+    document.getElementById('clearFiltersBtn').addEventListener('click', () => {
+      state.province = '';
+      state.municipality = '';
+      renderFilters();
+      renderMarkers();
+    });
+    document.querySelectorAll('.chart-scope').forEach(cb => cb.addEventListener('change', () => {
+      const visible = state.points.filter(passes);
+      renderInsights((map.getBounds().isValid() ? visible.filter(inBounds) : visible));
+    }));
+  </script>
 </body>
 </html>
