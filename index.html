@@ -417,17 +417,12 @@
     }
 
     function refreshLayerOrder(){
-      const defs = layerState.items.filter(d => d.kind !== 'points' && d.kind !== 'sheet' ? true : true);
-      const visibleDefs = defs.filter(d => d.visible && d.layer);
+      const visibleDefs = layerState.items.filter(d => d.visible && d.layer);
       visibleDefs.forEach((def, idx) => {
         const pane = map.getPane(def.pane);
         if (pane) pane.style.zIndex = 410 + idx;
+        if (def.layer.setZIndex) def.layer.setZIndex(410 + idx);
       });
-      const pointsDef = layerState.items.find(d => d.id === 'pts');
-      if (pointsDef?.layer && pointsDef.visible) {
-        const pane = map.getPane(pointsDef.pane);
-        if (pane) pane.style.zIndex = 900;
-      }
     }
 
     function renderLayersList(){
@@ -555,7 +550,18 @@
 
     function buildPointsLayer(data){
       const pts = collectPoints(data);
-      const layer = L.layerGroup();
+      const layer = L.markerClusterGroup({
+        pane:'pane-pts',
+        spiderfyOnMaxZoom:true,
+        showCoverageOnHover:false,
+        zoomToBoundsOnClick:true,
+        maxClusterRadius: 52,
+        iconCreateFunction: c => L.divIcon({
+          html:`<div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:${clusterColor(c.getChildCount())};border:2px solid rgba(15,23,42,.14);color:#fff;font-weight:700;box-shadow:0 8px 18px rgba(15,23,42,.15)">${c.getChildCount()}</div>`,
+          className:'cluster-icon',
+          iconSize:[40,40]
+        })
+      });
       pts.forEach(d => {
         const marker = L.circleMarker([d.lat, d.lng], { radius:5, color:'#0b5cab', weight:2, fillColor:'#14b8a6', fillOpacity:.85 })
           .bindPopup(popupFor(d), { maxWidth:420 });
