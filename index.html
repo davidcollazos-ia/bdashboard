@@ -68,21 +68,18 @@
     .layers-list{display:grid;gap:10px}
     .layer-card{border:1px solid #e9d8e7;border-radius:14px;background:#fffdfa;box-shadow:0 6px 14px rgba(31,41,55,.04);overflow:hidden}
     .layer-card.dragging{opacity:.55;transform:scale(.995)}
-    .layer-head{display:flex;align-items:center;gap:8px;padding:10px 10px 8px;border-bottom:1px solid #f0e5ef;background:linear-gradient(180deg,#fffdfd,#fbf6fb);cursor:grab}
+    .layer-head{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #f0e5ef;background:linear-gradient(180deg,#fffdfd,#fbf6fb);cursor:grab}
     .layer-head:active{cursor:grabbing}
     .layer-grip{font-size:16px;line-height:1;color:var(--muted);user-select:none}
-    .layer-meta{min-width:0;flex:1}
-    .layer-name{font-weight:800;font-size:12px;color:var(--ink);line-height:1.2}
-    .layer-sub{font-size:10px;color:var(--muted);line-height:1.2;margin-top:2px}
-    .layer-body{padding:10px;display:grid;gap:8px}
-    .layer-controls{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:11px;color:#475569}
-    .layer-controls input[type="range"]{width:100%}
-    .layer-actions{display:flex;align-items:center;gap:8px}
-    .layer-toggle{display:flex;align-items:center;gap:6px;font-size:11px;color:#334155}
+    .layer-meta{min-width:0;flex:1;display:flex;align-items:center;gap:8px}
+    .layer-name{font-weight:800;font-size:12px;color:var(--ink);line-height:1.2;flex:1;min-width:0}
+    .layer-body{padding:8px 10px 9px;display:grid;gap:7px}
+    .layer-controls{display:flex;align-items:center;gap:8px;font-size:10px;color:#475569}
+    .layer-controls input[type="range"]{width:100%;height:3px;accent-color:var(--brand);cursor:pointer}
+    .layer-toggle{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#334155;white-space:nowrap}
     .layer-legend{border-top:1px dashed #eadfeb;padding-top:8px;display:none;gap:6px}
     .layer-card.expanded .layer-legend{display:grid}
-    .legend-btn{border:1px solid #e6d8e4;background:#fff;border-radius:10px;padding:5px 8px;font-size:11px;font-weight:700;color:var(--brand);cursor:pointer}
-    .layer-order{font-size:10px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+    .legend-btn{border:1px solid #e6d8e4;background:#fff;border-radius:999px;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--brand);cursor:pointer;flex:0 0 auto;padding:0;line-height:1}
     .insights{padding:14px;display:flex;flex-direction:column;gap:12px;flex:0 0 auto;min-height:0}
     .card{border:1px solid var(--line);border-radius:16px;background:#fffdf9;overflow:hidden;box-shadow:0 8px 20px rgba(31,41,55,.04)}
     .card-header{padding:11px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer;background:linear-gradient(180deg,#fbf7fb,#f2e7f3);border-bottom:1px solid var(--line)}
@@ -437,18 +434,17 @@
             <span class="layer-grip" title="Arrastrar">⋮⋮</span>
             <div class="layer-meta">
               <div class="layer-name">${esc(def.label)}</div>
-              <div class="layer-sub">${esc(def.subtitle)}</div>
+              <label class="layer-toggle" title="Mostrar u ocultar">
+                <input type="checkbox" ${def.visible ? 'checked' : ''} data-action="toggle">
+                Visible
+              </label>
             </div>
-            <span class="layer-order">#${idx + 1}</span>
+            <button type="button" class="legend-btn" data-action="legend" title="Mostrar u ocultar leyenda">⌄</button>
           </div>
           <div class="layer-body">
-            <label class="layer-toggle"><input type="checkbox" ${def.visible ? 'checked' : ''} data-action="toggle"> Visible</label>
             <div class="layer-controls">
-              <span>Transparencia</span>
-              <input type="range" min="0.10" max="1" step="0.05" value="${def.opacity}" data-action="opacity">
-            </div>
-            <div class="layer-actions">
-              <button type="button" class="legend-btn" data-action="legend">Leyenda</button>
+              <span>Opacidad</span>
+              <input type="range" min="0" max="1" step="0.02" value="${def.opacity}" data-action="opacity">
             </div>
             <div class="layer-legend">
               ${def.legend.map(item => `<div class="legend-item"><div class="legend-left"><span class="legend-swatch" style="background:${item.color}"></span><span class="legend-label">${esc(item.label)}</span></div><span class="legend-value">${esc(item.note)}</span></div>`).join('')}
