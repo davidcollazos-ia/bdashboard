@@ -137,7 +137,6 @@
       <h1>PID Dashboard</h1>
       <p>Polígonos municipales y puntos clusterizados en una sola vista.</p>
     </div>
-    <div class="stats" id="stats"></div>
     <div class="filters">
       <div class="block capas">
         <h2>Capas del mapa</h2>
@@ -667,15 +666,6 @@
       return (!state.province || d.provincia === state.province) && (!state.municipality || d.municipio === state.municipality);
     }
 
-    function setStats(visible){
-      document.getElementById('stats').innerHTML = `
-        <div class="stat"><div class="n">${state.points.length}</div><div class="l">puntos</div></div>
-        <div class="stat"><div class="n">${visible}</div><div class="l">visibles</div></div>
-        <div class="stat"><div class="n">${state.municipios.length}</div><div class="l">municipios</div></div>
-        <div class="stat"><div class="n">${uniqueSorted(state.points.map(d => d.provincia)).length}</div><div class="l">provincias</div></div>
-      `;
-    }
-
     function bars(targetId, entries, palette){
       const el = document.getElementById(targetId);
       el.innerHTML = '';
@@ -738,7 +728,6 @@
 
     function renderMarkers(){
       const visible = state.points.filter(passes);
-      setStats(visible.length);
       renderDashboard();
     }
 
