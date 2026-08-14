@@ -74,8 +74,6 @@
     .layer-meta{min-width:0;flex:1;display:flex;align-items:center;gap:8px}
     .layer-name{font-weight:800;font-size:12px;color:var(--ink);line-height:1.2;flex:1;min-width:0}
     .layer-body{padding:8px 10px 9px;display:grid;gap:7px}
-    .layer-controls{display:flex;align-items:center;gap:8px;font-size:10px;color:#475569}
-    .layer-controls input[type="range"]{width:100%;height:3px;accent-color:var(--brand);cursor:pointer}
     .layer-toggle{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#334155;white-space:nowrap}
     .layer-legend{border-top:1px dashed #eadfeb;padding-top:8px;display:none;gap:6px}
     .layer-card.expanded .layer-legend{display:grid}
@@ -295,7 +293,6 @@
           kind:'geojson',
           url:'./municipios_puntos_join.geojson',
           visible:true,
-          opacity:0.75,
           pane:'pane-mun',
           legend:[
             { label:'0 puntos', color:'#e7ddea', note:'Sin contenido' },
@@ -313,7 +310,6 @@
           kind:'points',
           url:'./seguimiento_PRO_20260727_123406.geojson',
           visible:true,
-          opacity:0.85,
           pane:'pane-pts',
           legend:[
             { label:'1-4 puntos', color:clusterColor(1), note:'Cluster pequeño' },
@@ -331,7 +327,6 @@
           kind:'sheet',
           url:'./_cdmdti/geojson_por_hoja/uso_de_la_pid.geojson',
           visible:false,
-          opacity:0.62,
           pane:'pane-uso',
           legend:[{ label:'Destinos', color:sheetColor('Uso de la PID'), note:'Usuarios / estado' }]
         },
@@ -342,7 +337,6 @@
           kind:'sheet',
           url:'./_cdmdti/geojson_por_hoja/modulos_comunes.geojson',
           visible:false,
-          opacity:0.62,
           pane:'pane-mods',
           legend:[{ label:'Destinos', color:sheetColor('Módulos Comunes'), note:'Soluciones digitales' }]
         },
@@ -353,7 +347,6 @@
           kind:'sheet',
           url:'./_cdmdti/geojson_por_hoja/datos_turisticos.geojson',
           visible:false,
-          opacity:0.62,
           pane:'pane-tur',
           legend:[{ label:'Destinos', color:sheetColor('Datos Turísticos'), note:'Tripletas / grafo' }]
         },
@@ -364,7 +357,6 @@
           kind:'sheet',
           url:'./_cdmdti/geojson_por_hoja/datos_no_ontologicos.geojson',
           visible:false,
-          opacity:0.62,
           pane:'pane-non',
           legend:[{ label:'Destinos', color:sheetColor('Datos No ontológicos'), note:'Registros JSON' }]
         },
@@ -375,7 +367,6 @@
           kind:'sheet',
           url:'./_cdmdti/geojson_por_hoja/destinos_gestores.geojson',
           visible:false,
-          opacity:0.62,
           pane:'pane-gest',
           legend:[{ label:'Destinos', color:sheetColor('Destinos Gestores'), note:'Relación gestor' }]
         }
@@ -385,19 +376,6 @@
     function ensurePane(name, zIndex){
       if (!map.getPane(name)) map.createPane(name);
       map.getPane(name).style.zIndex = zIndex;
-    }
-
-    function setLayerOpacity(layer, opacity){
-      if (!layer) return;
-      if (layer.setStyle) {
-        layer.setStyle({ opacity, fillOpacity: Math.max(0.05, opacity) });
-      }
-      if (layer.eachLayer) {
-        layer.eachLayer(child => {
-          if (child.setStyle) child.setStyle({ opacity, fillOpacity: Math.max(0.05, opacity) });
-          if (child.setOpacity) child.setOpacity(opacity);
-        });
-      }
     }
 
     function bringLayerToOrder(def){
@@ -442,10 +420,6 @@
             <button type="button" class="legend-btn" data-action="legend" title="Mostrar u ocultar leyenda">⌄</button>
           </div>
           <div class="layer-body">
-            <div class="layer-controls">
-              <span>Opacidad</span>
-              <input type="range" min="0" max="1" step="0.02" value="${def.opacity}" data-action="opacity">
-            </div>
             <div class="layer-legend">
               ${def.legend.map(item => `<div class="legend-item"><div class="legend-left"><span class="legend-swatch" style="background:${item.color}"></span><span class="legend-label">${esc(item.label)}</span></div><span class="legend-value">${esc(item.note)}</span></div>`).join('')}
             </div>
@@ -454,7 +428,6 @@
 
         const head = card.querySelector('.layer-head');
         const toggle = card.querySelector('[data-action="toggle"]');
-        const opacity = card.querySelector('[data-action="opacity"]');
         const legendBtn = card.querySelector('[data-action="legend"]');
 
         head.addEventListener('dblclick', () => {
@@ -467,10 +440,6 @@
             else map.removeLayer(def.layer);
           }
           refreshLayerOrder();
-        });
-        opacity.addEventListener('input', e => {
-          def.opacity = Number(e.target.value);
-          setLayerOpacity(def.layer, def.opacity);
         });
         legendBtn.addEventListener('click', () => card.classList.toggle('expanded'));
         card.addEventListener('dragstart', e => {
@@ -741,7 +710,6 @@
         if (!def.layer) return;
         if (def.visible && !map.hasLayer(def.layer)) def.layer.addTo(map);
         if (!def.visible && map.hasLayer(def.layer)) map.removeLayer(def.layer);
-        setLayerOpacity(def.layer, def.opacity);
       });
       refreshLayerOrder();
     }
@@ -780,7 +748,6 @@
       defs[6].layer = buildSheetLayer(defs[6], gestData);
       defs.forEach(def => {
         if (def.visible && def.layer) def.layer.addTo(map);
-        setLayerOpacity(def.layer, def.opacity);
       });
       renderLayersList();
       refreshGeoLayers();
