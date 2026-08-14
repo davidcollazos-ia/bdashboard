@@ -122,6 +122,13 @@
     .meta div{background:#fffdfd;border:1px solid var(--line);border-radius:10px;padding:8px}
     .meta b{display:block;font-size:10px;color:var(--muted);margin-bottom:2px;text-transform:uppercase;letter-spacing:.04em}
     .note{font-size:11px;color:var(--muted);line-height:1.4}
+    .identify-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 8px}
+    .identify-tab{border:1px solid #eadfeb;background:#fffdfd;color:#5f2b7a;border-radius:999px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer}
+    .identify-tab.active{background:rgba(143,58,127,.1);border-color:rgba(143,58,127,.24);color:var(--brand)}
+    .identify-panel{display:none}
+    .identify-panel.active{display:block}
+    .identify-summary{border:1px solid #eadfeb;border-radius:12px;padding:10px;background:#fffdfd}
+    .identify-label{display:inline-block;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:6px}
     @media (max-width:1100px){.panel{width:320px}#map{left:340px;right:340px}.bottom-grid{grid-template-columns:1fr}}
     @media (max-width:900px){html,body{overflow:auto}#map{position:relative;left:0;right:0;height:52vh}.panel{position:relative;left:auto;right:auto;top:auto;width:auto;max-height:none;margin:12px 12px 0}}
   </style>
@@ -476,67 +483,93 @@
       }));
     }
 
+    function htmlForMetaPairs(entries, emptyText='Sin datos'){
+      if (!entries.length) return `<div>${esc(emptyText)}</div>`;
+      return entries.map(([k, v]) => `<div><b>${esc(k)}</b>${esc(v)}</div>`).join('');
+    }
+
+    function wireIdentifyTabs(layerItem){
+      layerItem.off('popupopen.popupTabs');
+      layerItem.on('popupopen.popupTabs', e => {
+        const popupEl = e.popup?.getElement?.();
+        if (!popupEl) return;
+        const tabs = Array.from(popupEl.querySelectorAll('.identify-tab'));
+        const panels = Array.from(popupEl.querySelectorAll('.identify-panel'));
+        const activate = targetId => {
+          tabs.forEach(tab => tab.classList.toggle('active', tab.dataset.target === targetId));
+          panels.forEach(panel => panel.classList.toggle('active', panel.id === targetId));
+        };
+        tabs.forEach(tab => {
+          tab.addEventListener('click', () => activate(tab.dataset.target));
+        });
+      });
+    }
+
     function buildIdentifyPopup(title, municipalityProps, pointData){
       if (!municipalityProps && pointData) {
         municipalityProps = layerState.byMunName.get(normalizeKey(pointData.municipio)) || null;
       }
-      const sheetCards = [];
+      const tabs = [];
+      const panels = [];
+      const tabId = s => `tab_${s}`;
+      const panelId = s => `panel_${s}`;
+
+      if (municipalityProps || pointData) {
+        tabs.push({ id:'summary', label:'Resumen' });
+        const summaryParts = [];
+        if (municipalityProps) {
+          summaryParts.push(`
+            <section class="identify-summary">
+              <span class="identify-label">Municipio</span>
+              <div class="meta">
+                <div><b>INE</b>${esc(municipalityProps.c_ine || 'N/D')}</div>
+                <div><b>Nombre</b>${esc(municipalityProps.n_mun || title || 'Municipio')}</div>
+                <div><b>Provincia</b>${esc(municipalityProps.n_prov || 'N/D')}</div>
+                <div><b>CCAA</b>${esc(municipalityProps.n_auton || 'N/D')}</div>
+                <div><b>Total puntos</b>${esc(municipalityProps.total_puntos ?? 'N/D')}</div>
+              </div>
+            </section>
+          `);
+        }
+        if (pointData) {
+          summaryParts.push(`
+            <section class="identify-summary" style="margin-top:8px">
+              <span class="identify-label">Punto</span>
+              <div class="meta">
+                <div><b>Nombre</b>${esc(pointData.title || 'Sin nombre')}</div>
+                <div><b>Municipio</b>${esc(pointData.municipio || 'Otros')}</div>
+                <div><b>Provincia</b>${esc(pointData.provincia || 'Otros')}</div>
+                <div><b>Clase</b>${esc(pointData.clase || 'Otros')}</div>
+              </div>
+            </section>
+          `);
+        }
+        panels.push(`<div class="identify-panel active" id="${panelId('summary')}">${summaryParts.join('')}</div>`);
+      }
+
       layerState.items.filter(def => def.kind === 'sheet').forEach(def => {
         const record = layerState.byCine.get(`${municipalityProps?.c_ine || ''}::${def.id}`);
         if (!record) return;
+        tabs.push({ id:def.id, label:def.label });
         const p = record.properties || {};
-        const rows = Object.entries(p)
-          .filter(([k, v]) => v !== null && v !== undefined && v !== '' && k !== 'geometry')
-          .slice(0, 8)
-          .map(([k, v]) => `<div><b>${esc(k)}</b>${esc(v)}</div>`)
-          .join('');
-        sheetCards.push(`
-          <section style="border:1px solid #eadfeb;border-radius:12px;padding:10px 10px 8px;background:#fffdfd;margin-top:8px">
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px">
-              <strong style="font-size:12px;color:var(--brand)">${esc(def.label)}</strong>
-              <span style="font-size:10px;color:var(--muted)">${esc(p.join_status || 'matched')}</span>
-            </div>
-            <div class="meta">${rows || '<div><b>Sin datos</b>No hay atributos relevantes en esta capa.</div>'}</div>
-          </section>
+        const rows = Object.entries(p).filter(([k, v]) => v !== null && v !== undefined && v !== '' && k !== 'geometry');
+        panels.push(`
+          <div class="identify-panel" id="${panelId(def.id)}">
+            <section class="identify-summary">
+              <span class="identify-label">${esc(def.label)}</span>
+              <div class="meta">${htmlForMetaPairs(rows.slice(0, 10), 'No hay atributos relevantes en esta capa.')}</div>
+            </section>
+          </div>
         `);
       });
-
-      const pointBlock = pointData ? `
-        <section style="border:1px solid #eadfeb;border-radius:12px;padding:10px 10px 8px;background:#fffdfd">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px">
-            <strong style="font-size:12px;color:#0f766e">Punto</strong>
-            <span style="font-size:10px;color:var(--muted)">${esc(pointData.clase || 'resource')}</span>
-          </div>
-          <div class="meta">
-            <div><b>Nombre</b>${esc(pointData.title || 'Sin nombre')}</div>
-            <div><b>Municipio</b>${esc(pointData.municipio || 'Otros')}</div>
-            <div><b>Provincia</b>${esc(pointData.provincia || 'Otros')}</div>
-            <div><b>URI</b>${esc(pointData.uri || 'N/D')}</div>
-          </div>
-        </section>
-      ` : '';
-
-      const muniBlock = municipalityProps ? `
-        <section style="border:1px solid #eadfeb;border-radius:12px;padding:10px 10px 8px;background:#fffdfd">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px">
-            <strong style="font-size:12px;color:var(--brand-2)">Municipio</strong>
-            <span style="font-size:10px;color:var(--muted)">${esc(municipalityProps.total_puntos ?? 'N/D')} puntos</span>
-          </div>
-          <div class="meta">
-            <div><b>INE</b>${esc(municipalityProps.c_ine || 'N/D')}</div>
-            <div><b>Provincia</b>${esc(municipalityProps.n_prov || 'N/D')}</div>
-            <div><b>CCAA</b>${esc(municipalityProps.n_auton || 'N/D')}</div>
-            <div><b>Nombre</b>${esc(municipalityProps.n_mun || title || 'Municipio')}</div>
-          </div>
-        </section>
-      ` : '';
 
       return `
         <div class="popup">
           <h3>${esc(title)}</h3>
-          ${muniBlock}
-          ${pointBlock}
-          ${sheetCards.join('')}
+          <div class="identify-tabs">
+            ${tabs.map((tab, idx) => `<button type="button" class="identify-tab ${idx === 0 ? 'active' : ''}" data-target="${panelId(tab.id)}">${esc(tab.label)}</button>`).join('')}
+          </div>
+          ${panels.join('')}
         </div>
       `;
     }
@@ -567,6 +600,7 @@
           layerItem.on('click', () => {
             const identify = buildIdentifyPopup(title, p, null);
             layerItem.bindPopup(identify, { maxWidth:520, className:'identify-popup' }).openPopup();
+            wireIdentifyTabs(layerItem);
           });
         }
       });
@@ -598,6 +632,7 @@
       pts.forEach(d => {
         const marker = L.circleMarker([d.lat, d.lng], { radius:5, color:'#0b5cab', weight:2, fillColor:'#14b8a6', fillOpacity:.85 })
           .bindPopup(buildIdentifyPopup(d.title, null, d), { maxWidth:520, className:'identify-popup' });
+        wireIdentifyTabs(marker);
         layer.addLayer(marker);
       });
       return layer;
@@ -660,6 +695,7 @@
         const title = p.n_mun || 'Municipio';
         const identify = buildIdentifyPopup(title, p, null);
         layer.bindPopup(identify, { maxWidth:520, className:'identify-popup' }).openPopup();
+        wireIdentifyTabs(layer);
       });
     }
 
