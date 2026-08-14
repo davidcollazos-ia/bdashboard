@@ -488,21 +488,13 @@
       return entries.map(([k, v]) => `<div><b>${esc(k)}</b>${esc(v)}</div>`).join('');
     }
 
-    function wireIdentifyTabs(layerItem){
-      layerItem.off('popupopen.popupTabs');
-      layerItem.on('popupopen.popupTabs', e => {
-        const popupEl = e.popup?.getElement?.();
-        if (!popupEl) return;
-        const tabs = Array.from(popupEl.querySelectorAll('.identify-tab'));
-        const panels = Array.from(popupEl.querySelectorAll('.identify-panel'));
-        const activate = targetId => {
-          tabs.forEach(tab => tab.classList.toggle('active', tab.dataset.target === targetId));
-          panels.forEach(panel => panel.classList.toggle('active', panel.id === targetId));
-        };
-        tabs.forEach(tab => {
-          tab.addEventListener('click', () => activate(tab.dataset.target));
-        });
-      });
+    function switchIdentifyTab(popupEl, targetId){
+      if (!popupEl) return false;
+      const tabs = Array.from(popupEl.querySelectorAll('.identify-tab'));
+      const panels = Array.from(popupEl.querySelectorAll('.identify-panel'));
+      tabs.forEach(tab => tab.classList.toggle('active', tab.dataset.target === targetId));
+      panels.forEach(panel => panel.classList.toggle('active', panel.id === targetId));
+      return true;
     }
 
     function buildIdentifyPopup(title, municipalityProps, pointData){
@@ -567,7 +559,7 @@
         <div class="popup">
           <h3>${esc(title)}</h3>
           <div class="identify-tabs">
-            ${tabs.map((tab, idx) => `<button type="button" class="identify-tab ${idx === 0 ? 'active' : ''}" data-target="${panelId(tab.id)}">${esc(tab.label)}</button>`).join('')}
+            ${tabs.map((tab, idx) => `<button type="button" class="identify-tab ${idx === 0 ? 'active' : ''}" data-target="${panelId(tab.id)}" onclick="window.pidSwitchIdentifyTab(this, '${panelId(tab.id)}')">${esc(tab.label)}</button>`).join('')}
           </div>
           ${panels.join('')}
         </div>
@@ -600,7 +592,6 @@
           layerItem.on('click', () => {
             const identify = buildIdentifyPopup(title, p, null);
             layerItem.bindPopup(identify, { maxWidth:520, className:'identify-popup' }).openPopup();
-            wireIdentifyTabs(layerItem);
           });
         }
       });
@@ -632,7 +623,6 @@
       pts.forEach(d => {
         const marker = L.circleMarker([d.lat, d.lng], { radius:5, color:'#0b5cab', weight:2, fillColor:'#14b8a6', fillOpacity:.85 })
           .bindPopup(buildIdentifyPopup(d.title, null, d), { maxWidth:520, className:'identify-popup' });
-        wireIdentifyTabs(marker);
         layer.addLayer(marker);
       });
       return layer;
@@ -695,7 +685,6 @@
         const title = p.n_mun || 'Municipio';
         const identify = buildIdentifyPopup(title, p, null);
         layer.bindPopup(identify, { maxWidth:520, className:'identify-popup' }).openPopup();
-        wireIdentifyTabs(layer);
       });
     }
 
@@ -909,6 +898,7 @@
       const visible = state.points.filter(passes);
       renderInsights((map.getBounds().isValid() ? visible.filter(inBounds) : visible));
     }));
+    window.pidSwitchIdentifyTab = (btn, targetId) => switchIdentifyTab(btn.closest('.popup'), targetId);
   </script>
 </body>
 </html>
