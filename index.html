@@ -65,6 +65,24 @@
     .actions button{background:none;border:none;color:var(--brand);cursor:pointer;font-weight:800;padding:0}
     .filter-item,.layer-item{display:flex;align-items:center;gap:8px;margin:0 0 8px;font-size:12px;color:#334155;cursor:pointer}
     .filter-item input{accent-color:var(--brand-2)} .layer-item input{accent-color:var(--brand)}
+    .layers-list{display:grid;gap:10px}
+    .layer-card{border:1px solid #e9d8e7;border-radius:14px;background:#fffdfa;box-shadow:0 6px 14px rgba(31,41,55,.04);overflow:hidden}
+    .layer-card.dragging{opacity:.55;transform:scale(.995)}
+    .layer-head{display:flex;align-items:center;gap:8px;padding:10px 10px 8px;border-bottom:1px solid #f0e5ef;background:linear-gradient(180deg,#fffdfd,#fbf6fb);cursor:grab}
+    .layer-head:active{cursor:grabbing}
+    .layer-grip{font-size:16px;line-height:1;color:var(--muted);user-select:none}
+    .layer-meta{min-width:0;flex:1}
+    .layer-name{font-weight:800;font-size:12px;color:var(--ink);line-height:1.2}
+    .layer-sub{font-size:10px;color:var(--muted);line-height:1.2;margin-top:2px}
+    .layer-body{padding:10px;display:grid;gap:8px}
+    .layer-controls{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:11px;color:#475569}
+    .layer-controls input[type="range"]{width:100%}
+    .layer-actions{display:flex;align-items:center;gap:8px}
+    .layer-toggle{display:flex;align-items:center;gap:6px;font-size:11px;color:#334155}
+    .layer-legend{border-top:1px dashed #eadfeb;padding-top:8px;display:none;gap:6px}
+    .layer-card.expanded .layer-legend{display:grid}
+    .legend-btn{border:1px solid #e6d8e4;background:#fff;border-radius:10px;padding:5px 8px;font-size:11px;font-weight:700;color:var(--brand);cursor:pointer}
+    .layer-order{font-size:10px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em}
     .insights{padding:14px;display:flex;flex-direction:column;gap:12px;flex:0 0 auto;min-height:0}
     .card{border:1px solid var(--line);border-radius:16px;background:#fffdf9;overflow:hidden;box-shadow:0 8px 20px rgba(31,41,55,.04)}
     .card-header{padding:11px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer;background:linear-gradient(180deg,#fbf7fb,#f2e7f3);border-bottom:1px solid var(--line)}
@@ -108,6 +126,7 @@
     .meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px;color:#334155}
     .meta div{background:#fffdfd;border:1px solid var(--line);border-radius:10px;padding:8px}
     .meta b{display:block;font-size:10px;color:var(--muted);margin-bottom:2px;text-transform:uppercase;letter-spacing:.04em}
+    .note{font-size:11px;color:var(--muted);line-height:1.4}
     @media (max-width:1100px){.panel{width:320px}#map{left:340px;right:340px}.bottom-grid{grid-template-columns:1fr}}
     @media (max-width:900px){html,body{overflow:auto}#map{position:relative;left:0;right:0;height:52vh}.panel{position:relative;left:auto;right:auto;top:auto;width:auto;max-height:none;margin:12px 12px 0}}
   </style>
@@ -123,12 +142,12 @@
       <div class="block capas">
         <h2>Capas del mapa</h2>
         <div class="content">
-          <label class="layer-item"><input type="checkbox" id="layerMunicipios" checked> Municipios con join espacial</label>
-          <div class="mini-summary">Rampa cálida aplicada a los polígonos según `total_puntos`.</div>
-          <div class="donut-legend" id="legendMunicipios" style="margin-bottom:10px"></div>
-          <label class="layer-item"><input type="checkbox" id="layerPuntos" checked> GeoJSON de puntos</label>
-          <div class="mini-summary">Clusters con escala de color por densidad de puntos.</div>
-          <div class="donut-legend" id="legendPuntos"></div>
+          <div class="note">Activa, reordena y ajusta la transparencia de cada capa. Las leyendas están plegadas por defecto.</div>
+          <div class="actions" style="margin-top:10px">
+            <button type="button" id="showAllLayers">Mostrar todas</button>
+            <button type="button" id="hideAllLayers">Ocultar todas</button>
+          </div>
+          <div class="layers-list" id="layersList"></div>
         </div>
       </div>
     </div>
@@ -214,7 +233,11 @@
     });
 
     const state = { points: [], municipios: [], province:'', municipality:'' };
-    const geoLayers = { municipios:null, puntos:cluster };
+    const geoLayers = { baseMunicipios:null, puntos:cluster, thematic:[] };
+    const layerState = {
+      items: [],
+      draggingId: null
+    };
     const esc = v => (v || '').toString().trim().replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
     const uniqueSorted = arr => Array.from(new Set(arr.filter(Boolean))).sort((a,b)=>a.localeCompare(b,'es'));
     const countBy = (items, key) => items.reduce((acc, it) => { const k = (it[key] || 'Sin dato').toString().trim(); acc[k] = (acc[k] || 0) + 1; return acc; }, {});
@@ -253,30 +276,292 @@
     }
 
     function renderLayerLegend(){
-      const munLegend = [
-        { label: '0 puntos', color: '#e7ddea', note: 'Municipio sin contenido' },
-        { label: '1-2 puntos', color: colorRamp[0], note: 'Muy bajo' },
-        { label: '3-4 puntos', color: colorRamp[1], note: 'Bajo' },
-        { label: '5-9 puntos', color: colorRamp[3], note: 'Medio' },
-        { label: '10-24 puntos', color: colorRamp[4], note: 'Alto' },
-        { label: '25+ puntos', color: colorRamp[7], note: 'Muy alto' }
+      return true;
+    }
+
+    function sheetColor(name){
+      const palette = {
+        'Uso de la PID':'#8f3a7f',
+        'Módulos Comunes':'#c13d83',
+        'Datos Turísticos':'#b14a91',
+        'Datos No ontológicos':'#6d2f69',
+        'Destinos Gestores':'#f59e0b'
+      };
+      return palette[name] || '#8f3a7f';
+    }
+
+    function getLayerDefs(){
+      return [
+        {
+          id:'mun',
+          label:'Municipios con join espacial',
+          subtitle:'Coropleta municipal base',
+          kind:'geojson',
+          url:'./municipios_puntos_join.geojson',
+          visible:true,
+          opacity:0.75,
+          pane:'pane-mun',
+          legend:[
+            { label:'0 puntos', color:'#e7ddea', note:'Sin contenido' },
+            { label:'1-2 puntos', color:colorRamp[0], note:'Muy bajo' },
+            { label:'3-4 puntos', color:colorRamp[1], note:'Bajo' },
+            { label:'5-9 puntos', color:colorRamp[3], note:'Medio' },
+            { label:'10-24 puntos', color:colorRamp[4], note:'Alto' },
+            { label:'25+ puntos', color:colorRamp[7], note:'Muy alto' }
+          ]
+        },
+        {
+          id:'pts',
+          label:'GeoJSON de puntos',
+          subtitle:'Clusters de recursos',
+          kind:'points',
+          url:'./seguimiento_PRO_20260727_123406.geojson',
+          visible:true,
+          opacity:0.85,
+          pane:'pane-pts',
+          legend:[
+            { label:'1-4 puntos', color:clusterColor(1), note:'Cluster pequeño' },
+            { label:'5-9 puntos', color:clusterColor(5), note:'Cluster bajo' },
+            { label:'10-24 puntos', color:clusterColor(10), note:'Cluster medio' },
+            { label:'25-49 puntos', color:clusterColor(25), note:'Cluster alto' },
+            { label:'50-99 puntos', color:clusterColor(50), note:'Cluster muy alto' },
+            { label:'100+ puntos', color:clusterColor(100), note:'Cluster masivo' }
+          ]
+        },
+        {
+          id:'uso',
+          label:'Uso de la PID',
+          subtitle:'Polígonos por hoja',
+          kind:'sheet',
+          url:'./_cdmdti/geojson_por_hoja/uso_de_la_pid.geojson',
+          visible:false,
+          opacity:0.62,
+          pane:'pane-uso',
+          legend:[{ label:'Destinos', color:sheetColor('Uso de la PID'), note:'Usuarios / estado' }]
+        },
+        {
+          id:'mods',
+          label:'Módulos Comunes',
+          subtitle:'Polígonos por hoja',
+          kind:'sheet',
+          url:'./_cdmdti/geojson_por_hoja/modulos_comunes.geojson',
+          visible:false,
+          opacity:0.62,
+          pane:'pane-mods',
+          legend:[{ label:'Destinos', color:sheetColor('Módulos Comunes'), note:'Soluciones digitales' }]
+        },
+        {
+          id:'tur',
+          label:'Datos Turísticos',
+          subtitle:'Polígonos por hoja',
+          kind:'sheet',
+          url:'./_cdmdti/geojson_por_hoja/datos_turisticos.geojson',
+          visible:false,
+          opacity:0.62,
+          pane:'pane-tur',
+          legend:[{ label:'Destinos', color:sheetColor('Datos Turísticos'), note:'Tripletas / grafo' }]
+        },
+        {
+          id:'non',
+          label:'Datos No ontológicos',
+          subtitle:'Polígonos por hoja',
+          kind:'sheet',
+          url:'./_cdmdti/geojson_por_hoja/datos_no_ontologicos.geojson',
+          visible:false,
+          opacity:0.62,
+          pane:'pane-non',
+          legend:[{ label:'Destinos', color:sheetColor('Datos No ontológicos'), note:'Registros JSON' }]
+        },
+        {
+          id:'gest',
+          label:'Destinos Gestores',
+          subtitle:'Polígonos por hoja',
+          kind:'sheet',
+          url:'./_cdmdti/geojson_por_hoja/destinos_gestores.geojson',
+          visible:false,
+          opacity:0.62,
+          pane:'pane-gest',
+          legend:[{ label:'Destinos', color:sheetColor('Destinos Gestores'), note:'Relación gestor' }]
+        }
       ];
-      const clusterLegend = [
-        { label: '1-4 puntos', color: clusterColor(1), note: 'Cluster pequeño' },
-        { label: '5-9 puntos', color: clusterColor(5), note: 'Cluster bajo' },
-        { label: '10-24 puntos', color: clusterColor(10), note: 'Cluster medio' },
-        { label: '25-49 puntos', color: clusterColor(25), note: 'Cluster alto' },
-        { label: '50-99 puntos', color: clusterColor(50), note: 'Cluster muy alto' },
-        { label: '100+ puntos', color: clusterColor(100), note: 'Cluster masivo' }
-      ];
-      document.getElementById('legendMunicipios').innerHTML = [
-        '<div class="legend-item"><div class="legend-left"><span class="legend-swatch" style="background:#8f3a7f"></span><span class="legend-label"><strong>Municipios</strong></span></div><span class="legend-value">Rampa magenta</span></div>',
-        ...munLegend.map(i => `<div class="legend-item"><div class="legend-left"><span class="legend-swatch" style="background:${i.color}"></span><span class="legend-label">${esc(i.label)}</span></div><span class="legend-value">${esc(i.note)}</span></div>`)
-      ].join('');
-      document.getElementById('legendPuntos').innerHTML = [
-        '<div class="legend-item"><div class="legend-left"><span class="legend-swatch" style="background:#c13d83"></span><span class="legend-label"><strong>Clusters</strong></span></div><span class="legend-value">Escala de densidad</span></div>',
-        ...clusterLegend.map(i => `<div class="legend-item"><div class="legend-left"><span class="legend-swatch" style="background:${i.color}"></span><span class="legend-label">${esc(i.label)}</span></div><span class="legend-value">${esc(i.note)}</span></div>`)
-      ].join('');
+    }
+
+    function ensurePane(name, zIndex){
+      if (!map.getPane(name)) map.createPane(name);
+      map.getPane(name).style.zIndex = zIndex;
+    }
+
+    function setLayerOpacity(layer, opacity){
+      if (!layer) return;
+      if (layer.setStyle) {
+        layer.setStyle({ opacity, fillOpacity: Math.max(0.05, opacity) });
+      }
+      if (layer.eachLayer) {
+        layer.eachLayer(child => {
+          if (child.setStyle) child.setStyle({ opacity, fillOpacity: Math.max(0.05, opacity) });
+          if (child.setOpacity) child.setOpacity(opacity);
+        });
+      }
+    }
+
+    function bringLayerToOrder(def){
+      if (!def.layer) return;
+      if (def.kind === 'points') {
+        if (def.visible && !map.hasLayer(def.layer)) def.layer.addTo(map);
+        return;
+      }
+      if (map.hasLayer(def.layer)) map.removeLayer(def.layer);
+      if (def.visible) {
+        def.layer.addTo(map);
+      }
+    }
+
+    function refreshLayerOrder(){
+      const defs = layerState.items.filter(d => d.kind !== 'points' && d.kind !== 'sheet' ? true : true);
+      const visibleDefs = defs.filter(d => d.visible && d.layer);
+      visibleDefs.forEach((def, idx) => {
+        const pane = map.getPane(def.pane);
+        if (pane) pane.style.zIndex = 410 + idx;
+      });
+      const pointsDef = layerState.items.find(d => d.id === 'pts');
+      if (pointsDef?.layer && pointsDef.visible) {
+        const pane = map.getPane(pointsDef.pane);
+        if (pane) pane.style.zIndex = 900;
+      }
+    }
+
+    function renderLayersList(){
+      const el = document.getElementById('layersList');
+      el.innerHTML = '';
+      layerState.items.forEach((def, idx) => {
+        const card = document.createElement('div');
+        card.className = 'layer-card';
+        card.draggable = true;
+        card.dataset.layerId = def.id;
+        card.innerHTML = `
+          <div class="layer-head">
+            <span class="layer-grip" title="Arrastrar">⋮⋮</span>
+            <div class="layer-meta">
+              <div class="layer-name">${esc(def.label)}</div>
+              <div class="layer-sub">${esc(def.subtitle)}</div>
+            </div>
+            <span class="layer-order">#${idx + 1}</span>
+          </div>
+          <div class="layer-body">
+            <label class="layer-toggle"><input type="checkbox" ${def.visible ? 'checked' : ''} data-action="toggle"> Visible</label>
+            <div class="layer-controls">
+              <span>Transparencia</span>
+              <input type="range" min="0.10" max="1" step="0.05" value="${def.opacity}" data-action="opacity">
+            </div>
+            <div class="layer-actions">
+              <button type="button" class="legend-btn" data-action="legend">Leyenda</button>
+            </div>
+            <div class="layer-legend">
+              ${def.legend.map(item => `<div class="legend-item"><div class="legend-left"><span class="legend-swatch" style="background:${item.color}"></span><span class="legend-label">${esc(item.label)}</span></div><span class="legend-value">${esc(item.note)}</span></div>`).join('')}
+            </div>
+          </div>
+        `;
+
+        const head = card.querySelector('.layer-head');
+        const toggle = card.querySelector('[data-action="toggle"]');
+        const opacity = card.querySelector('[data-action="opacity"]');
+        const legendBtn = card.querySelector('[data-action="legend"]');
+
+        head.addEventListener('dblclick', () => {
+          card.classList.toggle('expanded');
+        });
+        toggle.addEventListener('change', e => {
+          def.visible = e.target.checked;
+          if (def.layer) {
+            if (def.visible) def.layer.addTo(map);
+            else map.removeLayer(def.layer);
+          }
+          refreshLayerOrder();
+        });
+        opacity.addEventListener('input', e => {
+          def.opacity = Number(e.target.value);
+          setLayerOpacity(def.layer, def.opacity);
+        });
+        legendBtn.addEventListener('click', () => card.classList.toggle('expanded'));
+        card.addEventListener('dragstart', e => {
+          layerState.draggingId = def.id;
+          card.classList.add('dragging');
+          e.dataTransfer.effectAllowed = 'move';
+        });
+        card.addEventListener('dragend', () => {
+          card.classList.remove('dragging');
+          layerState.draggingId = null;
+        });
+        card.addEventListener('dragover', e => e.preventDefault());
+        card.addEventListener('drop', e => {
+          e.preventDefault();
+          const draggingId = layerState.draggingId;
+          if (!draggingId || draggingId === def.id) return;
+          const fromIndex = layerState.items.findIndex(x => x.id === draggingId);
+          const toIndex = layerState.items.findIndex(x => x.id === def.id);
+          if (fromIndex < 0 || toIndex < 0) return;
+          const [moved] = layerState.items.splice(fromIndex, 1);
+          layerState.items.splice(toIndex, 0, moved);
+          renderLayersList();
+          refreshLayerOrder();
+        });
+
+        el.appendChild(card);
+      });
+    }
+
+    async function loadGeoJson(url){
+      const resp = await fetch(url, { cache:'no-store' });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status} for ${url}`);
+      return await resp.json();
+    }
+
+    function buildSheetLayer(def, data){
+      const color = sheetColor(def.label);
+      const layer = L.geoJSON(data, {
+        pane: def.pane,
+        style: feature => {
+          const total = Number(feature?.properties?.total_puntos ?? feature?.properties?.['Número de Usuarios'] ?? feature?.properties?.['N Usuarios con Acceso'] ?? feature?.properties?.['Número de registros'] ?? feature?.properties?.['TRIPLETAS_GRAFO 30/07/2026'] ?? 0);
+          const opacity = def.opacity;
+          const fillOpacity = Math.max(0.08, opacity * 0.72);
+          const weight = 1;
+          if (total > 0) {
+            const idx = clamp(Math.floor(Math.log10(total + 1) * 2), 0, colorRamp.length - 1);
+            return { color, weight, opacity, fillColor: colorRamp[idx], fillOpacity };
+          }
+          return { color, weight, opacity, fillColor: color, fillOpacity };
+        },
+        onEachFeature: (feature, layerItem) => {
+          const p = feature.properties || {};
+          const title = p['Nombre Destino'] || p['NOMBRE_DESTINO'] || p['Nombre Destino Gestor'] || p.n_mun || p.name || 'Registro';
+          const items = Object.entries(p)
+            .filter(([k]) => k !== 'geometry')
+            .slice(0, 8)
+            .map(([k, v]) => `<div><b>${esc(k)}</b>${esc(v)}</div>`)
+            .join('');
+          layerItem.bindPopup(`<div class="popup"><h3>${esc(title)}</h3><div class="meta">${items}</div></div>`, { maxWidth:420 });
+        }
+      });
+      return layer;
+    }
+
+    function buildMunicipalityLayer(data){
+      return L.geoJSON(data, {
+        pane: 'pane-mun',
+        style: municipalityStyle,
+        onEachFeature: municipalityPopup
+      });
+    }
+
+    function buildPointsLayer(data){
+      const pts = collectPoints(data);
+      const layer = L.layerGroup();
+      pts.forEach(d => {
+        const marker = L.circleMarker([d.lat, d.lng], { radius:5, color:'#0b5cab', weight:2, fillColor:'#14b8a6', fillOpacity:.85 })
+          .bindPopup(popupFor(d), { maxWidth:420 });
+        layer.addLayer(marker);
+      });
+      return layer;
     }
 
     function collectPoints(root){
@@ -446,18 +731,9 @@
     }
 
     function renderMarkers(){
-      cluster.clearLayers();
       const visible = state.points.filter(passes);
-      visible.forEach(d => {
-        const marker = L.circleMarker([d.lat, d.lng], { radius:5, color:'#0b5cab', weight:2, fillColor:'#14b8a6', fillOpacity:.85 }).bindPopup(popupFor(d), { maxWidth:420 });
-        cluster.addLayer(marker);
-      });
       setStats(visible.length);
       renderDashboard();
-      if (visible.length){
-        const fg = L.latLngBounds(visible.map(d => [d.lat, d.lng]));
-        map.fitBounds(fg.pad(0.08));
-      }
     }
 
     function toggleFilter(type, cb){}
@@ -470,29 +746,52 @@
     }
 
     function refreshGeoLayers(){
-      const showMun = document.getElementById('layerMunicipios').checked;
-      const showPts = document.getElementById('layerPuntos').checked;
-      if (geoLayers.municipios) {
-        if (showMun && !map.hasLayer(geoLayers.municipios)) geoLayers.municipios.addTo(map);
-        if (!showMun && map.hasLayer(geoLayers.municipios)) map.removeLayer(geoLayers.municipios);
-      }
-      if (showPts && !map.hasLayer(cluster)) cluster.addTo(map);
-      if (!showPts && map.hasLayer(cluster)) map.removeLayer(cluster);
+      layerState.items.forEach(def => {
+        if (!def.layer) return;
+        if (def.visible && !map.hasLayer(def.layer)) def.layer.addTo(map);
+        if (!def.visible && map.hasLayer(def.layer)) map.removeLayer(def.layer);
+        setLayerOpacity(def.layer, def.opacity);
+      });
+      refreshLayerOrder();
     }
 
     async function loadBaseLayers(){
-      const [munResp, ptsResp] = await Promise.all([
-        fetch('./municipios_puntos_join.geojson', { cache:'no-store' }),
-        fetch('./seguimiento_PRO_20260727_123406.geojson', { cache:'no-store' })
+      ensurePane('pane-mun', 420);
+      ensurePane('pane-uso', 430);
+      ensurePane('pane-mods', 440);
+      ensurePane('pane-tur', 450);
+      ensurePane('pane-non', 460);
+      ensurePane('pane-gest', 470);
+      ensurePane('pane-pts', 900);
+
+      const defs = getLayerDefs();
+      layerState.items = defs;
+
+      const [munData, ptsData, usoData, modsData, turData, nonData, gestData] = await Promise.all([
+        loadGeoJson(defs[0].url),
+        loadGeoJson(defs[1].url),
+        loadGeoJson(defs[2].url),
+        loadGeoJson(defs[3].url),
+        loadGeoJson(defs[4].url),
+        loadGeoJson(defs[5].url),
+        loadGeoJson(defs[6].url)
       ]);
-      if (!munResp.ok) throw new Error(`Municipios HTTP ${munResp.status}`);
-      if (!ptsResp.ok) throw new Error(`Puntos HTTP ${ptsResp.status}`);
-      const munData = await munResp.json();
-      const ptsData = await ptsResp.json();
       state.municipios = Array.isArray(munData.features) ? munData.features : [];
       state.points = enrichPointsWithProvince(collectPoints(ptsData), state.municipios);
-      geoLayers.municipios = L.geoJSON(munData, { style: municipalityStyle, onEachFeature: municipalityPopup });
-      geoLayers.municipios.addTo(map);
+      geoLayers.baseMunicipios = buildMunicipalityLayer(munData);
+      geoLayers.puntos = buildPointsLayer(ptsData);
+      defs[0].layer = geoLayers.baseMunicipios;
+      defs[1].layer = geoLayers.puntos;
+      defs[2].layer = buildSheetLayer(defs[2], usoData);
+      defs[3].layer = buildSheetLayer(defs[3], modsData);
+      defs[4].layer = buildSheetLayer(defs[4], turData);
+      defs[5].layer = buildSheetLayer(defs[5], nonData);
+      defs[6].layer = buildSheetLayer(defs[6], gestData);
+      defs.forEach(def => {
+        if (def.visible && def.layer) def.layer.addTo(map);
+        setLayerOpacity(def.layer, def.opacity);
+      });
+      renderLayersList();
       refreshGeoLayers();
       renderFilters();
       renderMarkers();
@@ -506,10 +805,9 @@
     });
 
     renderLayerLegend();
+    renderLayersList();
 
     map.on('zoomend moveend', renderDashboard);
-    document.getElementById('layerMunicipios').addEventListener('change', refreshGeoLayers);
-    document.getElementById('layerPuntos').addEventListener('change', refreshGeoLayers);
     document.getElementById('provinceSelect').addEventListener('change', e => {
       state.province = e.target.value;
       state.municipality = '';
@@ -525,6 +823,16 @@
       state.municipality = '';
       renderFilters();
       renderMarkers();
+    });
+    document.getElementById('showAllLayers').addEventListener('click', () => {
+      layerState.items.forEach(def => def.visible = true);
+      renderLayersList();
+      refreshGeoLayers();
+    });
+    document.getElementById('hideAllLayers').addEventListener('click', () => {
+      layerState.items.forEach((def, idx) => def.visible = idx < 2);
+      renderLayersList();
+      refreshGeoLayers();
     });
     document.querySelectorAll('.chart-scope').forEach(cb => cb.addEventListener('change', () => {
       const visible = state.points.filter(passes);
