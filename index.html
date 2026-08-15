@@ -700,11 +700,12 @@
     }
 
     function renderFilters(){
-      const provinces = uniqueSorted(state.points.map(d => d.provincia));
+      const provinceSource = state.municipios.length ? state.municipios.map(f => f.properties || {}) : state.points;
+      const provinces = uniqueSorted(provinceSource.map(d => d.n_prov || d.provincia || d.province));
       const municipalities = uniqueSorted(
-        state.points
-          .filter(d => !state.province || d.provincia === state.province)
-          .map(d => d.municipio)
+        provinceSource
+          .filter(d => !state.province || (d.n_prov || d.provincia || d.province) === state.province)
+          .map(d => d.n_mun || d.municipio || d.name)
       );
       const provinceSelect = document.getElementById('provinceSelect');
       const municipalitySelect = document.getElementById('municipalitySelect');
@@ -723,6 +724,12 @@
 
     function passes(d){
       return (!state.province || d.provincia === state.province) && (!state.municipality || d.municipio === state.municipality);
+    }
+
+    function activeMunicipalityMatches(props){
+      const name = props?.n_mun || props?.municipality || props?.name || '';
+      const prov = props?.n_prov || props?.provincia || props?.province || '';
+      return (!state.province || prov === state.province) && (!state.municipality || name === state.municipality);
     }
 
     function bars(targetId, entries, palette){
@@ -804,7 +811,23 @@
         if (!def.layer) return;
         if (def.visible && !map.hasLayer(def.layer)) def.layer.addTo(map);
         if (!def.visible && map.hasLayer(def.layer)) map.removeLayer(def.layer);
+        if (def.kind === 'geojson' || def.kind === 'sheet') {
+          def.layer.eachLayer(child => {
+            const props = child.feature?.properties || {};
+            const matches = def.id === 'mun' ? activeMunicipalityMatches(props) : activeMunicipalityMatches(layerState.byCine.get(`${String(props.c_ine || '')}::mun`)?.properties || props);
+            child.setStyle(matches ? {} : { opacity:0, fillOpacity:0, weight:0, fillColor:'#ffffff' });
+          });
+        }
       });
+      const pointsDef = layerState.items.find(d => d.id === 'pts');
+      if (pointsDef?.layer) {
+        pointsDef.layer.clearLayers();
+        state.points.filter(passes).forEach(d => {
+          const marker = L.circleMarker([d.lat, d.lng], { radius:5, color:'#0b5cab', weight:2, fillColor:'#14b8a6', fillOpacity:.85 })
+            .bindPopup(buildIdentifyPopup(d.title, null, d), { maxWidth:520, className:'identify-popup' });
+          pointsDef.layer.addLayer(marker);
+        });
+      }
       refreshLayerOrder();
     }
 
