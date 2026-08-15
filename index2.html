@@ -126,13 +126,13 @@
     .insights{padding:14px;display:flex;flex-direction:column;gap:12px;flex:1 1 auto;min-height:0}
     .insights > .card:first-child{margin-top:2px}
     .card{border:1px solid #e9d8e7;border-radius:14px;background:#fffdfa;overflow:hidden;box-shadow:0 6px 14px rgba(31,41,55,.04)}
-    .card-header{padding:8px 10px;display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer;background:linear-gradient(180deg,#fffdfd,#fcf3ea);border-bottom:1px solid #f0e5ef}
+    .card-header{padding:8px 10px;display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:grab;background:linear-gradient(180deg,#fffdfd,#fcf3ea);border-bottom:1px solid #f0e5ef}
+    .card-header:active{cursor:grabbing}
     .card-header h3{margin:0;font-size:13px;color:var(--ink);font-weight:800;letter-spacing:.01em}
     .card-title-wrap{display:flex;align-items:center;gap:8px;min-width:0;flex:1}
-    .card-toggle{font-size:0;color:transparent;line-height:1;display:flex;align-items:center;justify-content:center;width:18px;height:18px;flex:0 0 auto;position:relative}
-    .card-toggle::before{content:'';width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid var(--muted);transition:transform .15s ease,border-color .15s ease}
+    .card-toggle{border:1px solid #e6d8e4;background:#fff;border-radius:999px;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:0;font-weight:700;color:var(--brand);cursor:pointer;flex:0 0 auto;padding:0;line-height:1;position:relative}
+    .card-toggle::before{content:'';width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid var(--brand);transition:transform .15s ease,border-color .15s ease}
     .card:not(.collapsed) .card-toggle::before{transform:rotate(180deg)}
-    .card-header:hover .card-toggle::before{color:var(--brand)}
     .card-body{padding:8px 10px 9px;overflow:visible}
     .card.collapsed .card-body{display:none}
     .card-mode{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);white-space:nowrap;user-select:none;flex:0 0 auto}
