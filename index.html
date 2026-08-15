@@ -79,7 +79,7 @@
     .layer-head{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #f0e5ef;background:linear-gradient(180deg,#fffdfd,#fbf6fb);cursor:grab}
     .layer-head:active{cursor:grabbing}
     .layer-grip{font-size:0;line-height:1;color:var(--muted);user-select:none;width:16px;text-align:center}
-    .layer-grip::before{content:'::: ';letter-spacing:-1px;font-size:16px;display:block}
+    .layer-grip::before{content:'⋮⋮';letter-spacing:-1px;font-size:16px;display:block}
     .layer-meta{min-width:0;flex:1;display:flex;align-items:center;gap:8px}
     .layer-name{font-weight:800;font-size:12px;color:var(--ink);line-height:1.2;flex:1;min-width:0}
     .layer-body{padding:8px 10px 9px;display:grid;gap:7px}
@@ -962,21 +962,11 @@
       document.getElementById('extraCountries').textContent = uniqueSorted(visiblePoints.map(d => d.municipio)).length;
       document.getElementById('extraProvinces').textContent = uniqueSorted(visiblePoints.map(d => d.provincia)).length;
 
-      const usoDef = layerState.items.find(d => d.id === 'uso');
-      const modsDef = layerState.items.find(d => d.id === 'mods');
-      const turDef = layerState.items.find(d => d.id === 'tur');
-      const nonDef = layerState.items.find(d => d.id === 'non');
-      const gestDef = layerState.items.find(d => d.id === 'gest');
-      const usageScope = scopedDataset('usageUsers', visiblePoints);
-      const modulesScope = scopedDataset('usageModules', visiblePoints);
-      const destScope = scopedDataset('usageDest', visiblePoints);
-      const turScope = scopedDataset('typesTur', visiblePoints);
-      const nonScope = scopedDataset('typesNon', visiblePoints);
-      const usageUsers = topMetricEntries(usoDef?.data?.features || [], f => extractNumericMetric(usoDef, f.properties || {}), f => extractFeatureLabel(f.properties)).filter(entry => !chartScope('usageUsers') || usageScope.some(p => extractFeatureLabel(p) === entry[0]));
-      const usageModules = topMetricEntries(modsDef?.data?.features || [], f => extractNumericMetric(modsDef, f.properties || {}), f => extractFeatureLabel(f.properties)).filter(entry => !chartScope('usageModules') || modulesScope.some(p => extractFeatureLabel(p) === entry[0]));
-      const usageDest = topMetricEntries(gestDef?.data?.features || [], f => extractNumericMetric(gestDef, f.properties || {}), f => extractFeatureLabel(f.properties)).filter(entry => !chartScope('usageDest') || destScope.some(p => extractFeatureLabel(p) === entry[0]));
-      const turEntries = topMetricEntries(turDef?.data?.features || [], f => extractNumericMetric(turDef, f.properties || {}), f => extractFeatureLabel(f.properties)).filter(entry => !chartScope('typesTur') || turScope.some(p => extractFeatureLabel(p) === entry[0]));
-      const nonEntries = topMetricEntries(nonDef?.data?.features || [], f => extractNumericMetric(nonDef, f.properties || {}), f => extractFeatureLabel(f.properties)).filter(entry => !chartScope('typesNon') || nonScope.some(p => extractFeatureLabel(p) === entry[0]));
+      const usageUsers = topMetricEntries(visiblePoints, p => p.total_puntos ?? 0, p => p.municipio || 'Sin nombre');
+      const usageModules = topMetricEntries(visiblePoints, p => (p.clase || '').length + (p.municipio || '').length, p => p.municipio || 'Sin nombre');
+      const usageDest = topMetricEntries(visiblePoints, p => p.provincia ? 1 : 0, p => p.provincia || 'Sin provincia');
+      const turEntries = topMetricEntries(visiblePoints, p => p.clase === 'Turístico' ? p.total_puntos ?? 0 : 0, p => p.clase || 'Sin clase');
+      const nonEntries = topMetricEntries(visiblePoints, p => p.clase !== 'Turístico' ? (p.total_puntos ?? 0) : 0, p => p.clase || 'Sin clase');
       bars('chartUsageUsers', usageUsers, chartPalette);
       bars('chartUsageModules', usageModules, chartPalette.slice().reverse());
       bars('chartUsageDest', usageDest, [chartPalette[1], chartPalette[2], chartPalette[3], chartPalette[4], chartPalette[5], chartPalette[0]]);
