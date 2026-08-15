@@ -151,13 +151,13 @@
   <div class="panel sidebar">
     <div class="hero">
       <h1>PID Dashboard</h1>
-      <p>PolÃ­gonos municipales y puntos clusterizados en una sola vista.</p>
+      <p>Polígonos municipales y puntos clusterizados en una sola vista.</p>
     </div>
     <div class="filters">
       <div class="block capas">
         <h2>Capas del mapa</h2>
         <div class="content">
-          <div class="note">Activa, reordena y ajusta la transparencia de cada capa. Las leyendas estÃ¡n plegadas por defecto.</div>
+          <div class="note">Activa, reordena y ajusta la transparencia de cada capa. Las leyendas están plegadas por defecto.</div>
           <div class="actions" style="margin-top:10px">
             <button type="button" id="showAllLayers">Mostrar todas</button>
             <button type="button" id="hideAllLayers">Ocultar todas</button>
@@ -306,9 +306,9 @@
     function metricPalette(name){
       const palette = {
         'Uso de la PID':['#fff2f8','#fbc6e5','#f68ac8','#ec4da2','#d81b74','#a9155b'],
-        'MÃ³dulos Comunes':['#fff7e8','#fde6b0','#fdcb70','#faa43c','#f07a1e','#c9550d'],
-        'Datos TurÃ­sticos':['#effcf7','#caf7e4','#8feccd','#45d9ad','#16b88f','#0d8a6e'],
-        'Datos No ontolÃ³gicos':['#f3f0ff','#ddd6ff','#bda9ff','#946efb','#6d41e9','#4f2cc0'],
+        'Módulos Comunes':['#fff7e8','#fde6b0','#fdcb70','#faa43c','#f07a1e','#c9550d'],
+        'Datos Turísticos':['#effcf7','#caf7e4','#8feccd','#45d9ad','#16b88f','#0d8a6e'],
+        'Datos No ontológicos':['#f3f0ff','#ddd6ff','#bda9ff','#946efb','#6d41e9','#4f2cc0'],
         'Destinos Gestores':['#fff1e8','#ffd3b5','#ffb06f','#ff8144','#ec591d','#ba4310']
       };
       return palette[name] || ['#f7e6f2','#f2d3ea','#ebb8dd','#de91c7','#c96aad','#b14a91'];
@@ -335,10 +335,10 @@
 
     function metricLabel(name){
       return {
-        'Uso de la PID':'NÃºmero de usuarios',
-        'MÃ³dulos Comunes':'Soluciones digitales activas',
-        'Datos TurÃ­sticos':'Incremento de tripletas',
-        'Datos No ontolÃ³gicos':'NÃºmero de registros',
+        'Uso de la PID':'Número de usuarios',
+        'Módulos Comunes':'Soluciones digitales activas',
+        'Datos Turísticos':'Incremento de tripletas',
+        'Datos No ontológicos':'Número de registros',
         'Destinos Gestores':'Destinos gestionados'
       }[name] || 'Valor';
     }
@@ -346,15 +346,15 @@
     function metricValue(def, props){
       const p = props || {};
       const n = v => parseNum(v);
-      if (def.id === 'uso') return n(p['NÃºmero de Usuarios']) ?? 0;
+      if (def.id === 'uso') return n(p['Número de Usuarios']) ?? 0;
       if (def.id === 'mods') return n(p['N Usuarios con Acceso']) ?? 0;
       if (def.id === 'tur') {
         const last = n(p['TRIPLETAS_GRAFO 30/07/2026']) ?? 0;
         const prev = n(p['TRIPLETAS_GRAFO 09/07/2026']) ?? 0;
         return last - prev;
       }
-      if (def.id === 'non') return n(p['NÃºmero de registros']) ?? 0;
-      if (def.id === 'gest') return n(p['NÃºmero de destinos gestionados']) ?? n(p['N destinos gestionados']) ?? n(p['NÃºmero de destinos']) ?? 0;
+      if (def.id === 'non') return n(p['Número de registros']) ?? 0;
+      if (def.id === 'gest') return n(p['Número de destinos gestionados']) ?? n(p['N destinos gestionados']) ?? n(p['Número de destinos']) ?? 0;
       return n(p.total_puntos) ?? 0;
     }
 
@@ -408,7 +408,7 @@
           visible:true,
           pane:'pane-pts',
           legend:[
-            { label:'1-4 puntos', color:clusterColor(1), note:'Cluster pequeÃ±o' },
+            { label:'1-4 puntos', color:clusterColor(1), note:'Cluster pequeño' },
             { label:'5-9 puntos', color:clusterColor(5), note:'Cluster bajo' },
             { label:'10-24 puntos', color:clusterColor(10), note:'Cluster medio' },
             { label:'25-49 puntos', color:clusterColor(25), note:'Cluster alto' },
@@ -419,7 +419,7 @@
         {
           id:'uso',
           label:'Uso de la PID',
-          subtitle:'PolÃ­gonos por hoja',
+          subtitle:'Polígonos por hoja',
           kind:'sheet',
           url:'./_cdmdti/geojson_por_hoja/uso_de_la_pid.geojson',
           visible:false,
@@ -435,59 +435,59 @@
         },
         {
           id:'mods',
-          label:'MÃ³dulos Comunes',
-          subtitle:'PolÃ­gonos por hoja',
+          label:'Módulos Comunes',
+          subtitle:'Polígonos por hoja',
           kind:'sheet',
           url:'./_cdmdti/geojson_por_hoja/modulos_comunes.geojson',
           visible:false,
           pane:'pane-mods',
           legend:[
             { label:'0', color:'#edf2f7', note:'Sin soluciones' },
-            { label:'1-2', color:metricPalette('MÃ³dulos Comunes')[0], note:'Muy bajo' },
-            { label:'3-5', color:metricPalette('MÃ³dulos Comunes')[1], note:'Bajo' },
-            { label:'6-10', color:metricPalette('MÃ³dulos Comunes')[2], note:'Medio' },
-            { label:'11-25', color:metricPalette('MÃ³dulos Comunes')[3], note:'Alto' },
-            { label:'26+', color:metricPalette('MÃ³dulos Comunes')[5], note:'Muy alto' }
+            { label:'1-2', color:metricPalette('Módulos Comunes')[0], note:'Muy bajo' },
+            { label:'3-5', color:metricPalette('Módulos Comunes')[1], note:'Bajo' },
+            { label:'6-10', color:metricPalette('Módulos Comunes')[2], note:'Medio' },
+            { label:'11-25', color:metricPalette('Módulos Comunes')[3], note:'Alto' },
+            { label:'26+', color:metricPalette('Módulos Comunes')[5], note:'Muy alto' }
           ]
         },
         {
           id:'tur',
-          label:'Datos TurÃ­sticos',
-          subtitle:'PolÃ­gonos por hoja',
+          label:'Datos Turísticos',
+          subtitle:'Polígonos por hoja',
           kind:'sheet',
           url:'./_cdmdti/geojson_por_hoja/datos_turisticos.geojson',
           visible:false,
           pane:'pane-tur',
           legend:[
-            { label:'CaÃ­da', color:'#f97316', note:'Baja respecto a 09/07' },
-            { label:'Sin cambio', color:'#eab308', note:'0 variaciÃ³n' },
-            { label:'Subida baja', color:metricPalette('Datos TurÃ­sticos')[2], note:'+1 a +10' },
-            { label:'Subida media', color:metricPalette('Datos TurÃ­sticos')[3], note:'+11 a +50' },
-            { label:'Subida alta', color:metricPalette('Datos TurÃ­sticos')[4], note:'+51 a +100' },
-            { label:'Subida muy alta', color:metricPalette('Datos TurÃ­sticos')[5], note:'+100+' }
+            { label:'Caída', color:'#f97316', note:'Baja respecto a 09/07' },
+            { label:'Sin cambio', color:'#eab308', note:'0 variación' },
+            { label:'Subida baja', color:metricPalette('Datos Turísticos')[2], note:'+1 a +10' },
+            { label:'Subida media', color:metricPalette('Datos Turísticos')[3], note:'+11 a +50' },
+            { label:'Subida alta', color:metricPalette('Datos Turísticos')[4], note:'+51 a +100' },
+            { label:'Subida muy alta', color:metricPalette('Datos Turísticos')[5], note:'+100+' }
           ]
         },
         {
           id:'non',
-          label:'Datos No ontolÃ³gicos',
-          subtitle:'PolÃ­gonos por hoja',
+          label:'Datos No ontológicos',
+          subtitle:'Polígonos por hoja',
           kind:'sheet',
           url:'./_cdmdti/geojson_por_hoja/datos_no_ontologicos.geojson',
           visible:false,
           pane:'pane-non',
           legend:[
             { label:'0', color:'#edf2f7', note:'Sin registros' },
-            { label:'1-2', color:metricPalette('Datos No ontolÃ³gicos')[0], note:'Muy bajo' },
-            { label:'3-5', color:metricPalette('Datos No ontolÃ³gicos')[1], note:'Bajo' },
-            { label:'6-10', color:metricPalette('Datos No ontolÃ³gicos')[2], note:'Medio' },
-            { label:'11-25', color:metricPalette('Datos No ontolÃ³gicos')[3], note:'Alto' },
-            { label:'26+', color:metricPalette('Datos No ontolÃ³gicos')[5], note:'Muy alto' }
+            { label:'1-2', color:metricPalette('Datos No ontológicos')[0], note:'Muy bajo' },
+            { label:'3-5', color:metricPalette('Datos No ontológicos')[1], note:'Bajo' },
+            { label:'6-10', color:metricPalette('Datos No ontológicos')[2], note:'Medio' },
+            { label:'11-25', color:metricPalette('Datos No ontológicos')[3], note:'Alto' },
+            { label:'26+', color:metricPalette('Datos No ontológicos')[5], note:'Muy alto' }
           ]
         },
         {
           id:'gest',
           label:'Destinos Gestores',
-          subtitle:'PolÃ­gonos por hoja',
+          subtitle:'Polígonos por hoja',
           kind:'sheet',
           url:'./_cdmdti/geojson_por_hoja/destinos_gestores.geojson',
           visible:false,
@@ -531,7 +531,7 @@
         card.dataset.layerId = def.id;
         card.innerHTML = `
           <div class="layer-head">
-            <span class="layer-grip" title="Arrastrar">â‹®â‹®</span>
+            <span class="layer-grip" title="Arrastrar">⋮⋮</span>
             <div class="layer-meta">
               <div class="layer-name">${esc(def.label)}</div>
               <label class="layer-toggle" title="Mostrar u ocultar">
@@ -539,7 +539,7 @@
                 Visible
               </label>
             </div>
-            <button type="button" class="legend-btn" data-action="legend" title="Mostrar u ocultar leyenda">âŒ„</button>
+            <button type="button" class="legend-btn" data-action="legend" title="Mostrar u ocultar leyenda">⌄</button>
           </div>
           <div class="layer-body">
             <div class="layer-legend">
@@ -869,6 +869,29 @@
         .slice(0, 6);
     }
 
+    function geometryCenter(geometry){
+      if (!geometry || !geometry.coordinates) return null;
+      const coords = [];
+      const walk = value => {
+        if (!Array.isArray(value)) return;
+        if (value.length && typeof value[0] === 'number' && typeof value[1] === 'number') {
+          coords.push(value);
+          return;
+        }
+        value.forEach(walk);
+      };
+      walk(geometry.coordinates);
+      if (!coords.length) return null;
+      const xs = coords.map(c => c[0]);
+      const ys = coords.map(c => c[1]);
+      return [ (Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2 ];
+    }
+
+    function featureVisibleInMap(feature){
+      const center = geometryCenter(feature?.geometry);
+      return center ? map.getBounds().contains([center[1], center[0]]) : false;
+    }
+
     function extractFeatureLabel(props){
       const p = props || {};
       return firstNonEmpty(
@@ -966,10 +989,9 @@
       const nonDef = layerState.items.find(d => d.id === 'non');
       const turFeatures = turDef?.data?.features || [];
       const nonFeatures = nonDef?.data?.features || [];
-      const visibleMunKeys = new Set(visiblePoints.map(p => normalizeKey(p.municipio)));
       const visibleCines = new Set(
         state.municipios
-          .filter(f => visibleMunKeys.has(normalizeKey(f?.properties?.n_mun || f?.properties?.name || f?.properties?.municipio)))
+          .filter(featureVisibleInMap)
           .map(f => String(f?.properties?.c_ine || ''))
           .filter(Boolean)
       );
