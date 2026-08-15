@@ -277,48 +277,48 @@
         </button>
       </div>
       <div class="insight-panel">
-        <div class="insight-view" id="view-pid-data">
+        <div class="insight-view active" id="view-pid-data">
           <div class="hero"><h1>Datos que contiene la PID</h1></div>
           <div class="insights">
-          <div class="card" id="cardDiag">
-            <div class="card-header" onclick="toggleCard('cardDiag')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Total y capa</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="diag" checked> Vista</label></div>
-            <div class="card-body"><div class="donut-wrap"><div class="donut" id="chartMaturity"><div class="donut-center" id="maturityCenter">0</div></div><div class="donut-legend" id="summaryMaturity"></div></div></div>
-          </div>
-          <div class="card collapsed" id="cardTypes">
-            <div class="card-header" onclick="toggleCard('cardTypes')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Categorías</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="types" checked> Vista</label></div>
-            <div class="card-body"><div class="spark" id="chartTypes"></div><div class="mini-summary" id="summaryTypes"></div></div>
-          </div>
-          <div class="card collapsed" id="cardPois">
-            <div class="card-header" onclick="toggleCard('cardPois')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>POIs por categoría</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="pois" checked> Vista</label></div>
-            <div class="card-body"><div class="spark" id="chartPois"></div><div class="mini-summary" id="summaryPois"></div></div>
-          </div>
-          <div class="card collapsed" id="cardCountries">
-            <div class="card-header" onclick="toggleCard('cardCountries')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Municipios top</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="countries" checked> Vista</label></div>
-            <div class="card-body"><div class="spark" id="chartCountries"></div><div class="mini-summary" id="summaryCountries"></div><div id="provinceChips" style="margin-top:8px"></div></div>
-          </div>
-          <div class="card collapsed" id="cardDiagnosis2">
-            <div class="card-header" onclick="toggleCard('cardDiagnosis2')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Diversidad</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="diagnosis2" checked> Vista</label></div>
-            <div class="card-body"><div class="spark" id="chartDiagnosis2"></div><div class="mini-summary" id="summaryDiagnosis2"></div></div>
-          </div>
+            <div class="card" id="cardDiag">
+              <div class="card-header" onclick="toggleCard('cardDiag')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Total y capa</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="diag" checked> Vista</label></div>
+              <div class="card-body"><div class="donut-wrap"><div class="donut" id="chartMaturity"><div class="donut-center" id="maturityCenter">0</div></div><div class="donut-legend" id="summaryMaturity"></div></div></div>
+            </div>
+            <div class="card collapsed" id="cardTypes">
+              <div class="card-header" onclick="toggleCard('cardTypes')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Categorías</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="types" checked> Vista</label></div>
+              <div class="card-body"><div class="spark" id="chartTypes"></div><div class="mini-summary" id="summaryTypes"></div></div>
+            </div>
+            <div class="card collapsed" id="cardPois">
+              <div class="card-header" onclick="toggleCard('cardPois')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>POIs por categoría</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="pois" checked> Vista</label></div>
+              <div class="card-body"><div class="spark" id="chartPois"></div><div class="mini-summary" id="summaryPois"></div></div>
+            </div>
+            <div class="card collapsed" id="cardCountries">
+              <div class="card-header" onclick="toggleCard('cardCountries')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Municipios top</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="countries" checked> Vista</label></div>
+              <div class="card-body"><div class="spark" id="chartCountries"></div><div class="mini-summary" id="summaryCountries"></div><div id="provinceChips" style="margin-top:8px"></div></div>
+            </div>
+            <div class="card collapsed" id="cardDiagnosis2">
+              <div class="card-header" onclick="toggleCard('cardDiagnosis2')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Diversidad</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="diagnosis2" checked> Vista</label></div>
+              <div class="card-body"><div class="spark" id="chartDiagnosis2"></div><div class="mini-summary" id="summaryDiagnosis2"></div></div>
+            </div>
           </div>
         </div>
-      <div class="insight-view" id="view-pid-usage">
+        <div class="insight-view" id="view-pid-usage">
           <div class="hero"><h1>Información del uso de la PID</h1></div>
           <div class="insights">
-          <div class="card collapsed" id="cardUsageUsers"><div class="card-header" onclick="toggleCard('cardUsageUsers')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Usuarios por municipio</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="usageUsers" checked> Vista</label></div><div class="card-body"><div class="spark" id="chartUsageUsers"></div><div class="mini-summary" id="summaryUsageUsers"></div></div></div>
-          <div class="card collapsed" id="cardUsageModules"><div class="card-header" onclick="toggleCard('cardUsageModules')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Módulos comunes</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="usageModules" checked> Vista</label></div><div class="card-body"><div class="spark" id="chartUsageModules"></div><div class="mini-summary" id="summaryUsageModules"></div></div></div>
-          <div class="card collapsed" id="cardUsageDest"><div class="card-header" onclick="toggleCard('cardUsageDest')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Destinos gestores</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="usageDest" checked> Vista</label></div><div class="card-body"><div class="spark" id="chartUsageDest"></div><div class="mini-summary" id="summaryUsageDest"></div></div></div>
+            <div class="card collapsed" id="cardUsageUsers"><div class="card-header" onclick="toggleCard('cardUsageUsers')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Usuarios por municipio</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="usageUsers" checked> Vista</label></div><div class="card-body"><div class="spark" id="chartUsageUsers"></div><div class="mini-summary" id="summaryUsageUsers"></div></div></div>
+            <div class="card collapsed" id="cardUsageModules"><div class="card-header" onclick="toggleCard('cardUsageModules')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Módulos comunes</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="usageModules" checked> Vista</label></div><div class="card-body"><div class="spark" id="chartUsageModules"></div><div class="mini-summary" id="summaryUsageModules"></div></div></div>
+            <div class="card collapsed" id="cardUsageDest"><div class="card-header" onclick="toggleCard('cardUsageDest')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Destinos gestores</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="usageDest" checked> Vista</label></div><div class="card-body"><div class="spark" id="chartUsageDest"></div><div class="mini-summary" id="summaryUsageDest"></div></div></div>
           </div>
         </div>
-      <div class="insight-view" id="view-pid-types">
+        <div class="insight-view" id="view-pid-types">
           <div class="hero"><h1>Información sobre tipologías de datos</h1></div>
           <div class="insights">
-          <div class="card collapsed" id="cardTypesTurIncrease">
-            <div class="card-header" onclick="toggleCard('cardTypesTurIncrease')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Incremento turístico por CCAA</h3></div></div>
-            <div class="card-body"><div class="spark" id="chartTurIncrease"></div><div class="mini-summary" id="summaryTurIncrease"></div></div>
-          </div>
-          <div class="card collapsed" id="cardTypesTur"><div class="card-header" onclick="toggleCard('cardTypesTur')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Datos turísticos</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="typesTur" checked> Vista</label></div><div class="card-body"><div class="spark" id="chartTypesTur"></div><div class="mini-summary" id="summaryTypesTur"></div></div></div>
-          <div class="card collapsed" id="cardTypesNon"><div class="card-header" onclick="toggleCard('cardTypesNon')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Datos no ontológicos</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="typesNon" checked> Vista</label></div><div class="card-body"><div class="spark" id="chartTypesNon"></div><div class="mini-summary" id="summaryTypesNon"></div></div></div>
+            <div class="card collapsed" id="cardTypesTurIncrease">
+              <div class="card-header" onclick="toggleCard('cardTypesTurIncrease')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Incremento turístico por CCAA</h3></div></div>
+              <div class="card-body"><div class="spark" id="chartTurIncrease"></div><div class="mini-summary" id="summaryTurIncrease"></div></div>
+            </div>
+            <div class="card collapsed" id="cardTypesTur"><div class="card-header" onclick="toggleCard('cardTypesTur')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Datos turísticos</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="typesTur" checked> Vista</label></div><div class="card-body"><div class="spark" id="chartTypesTur"></div><div class="mini-summary" id="summaryTypesTur"></div></div></div>
+            <div class="card collapsed" id="cardTypesNon"><div class="card-header" onclick="toggleCard('cardTypesNon')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Datos no ontológicos</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="typesNon" checked> Vista</label></div><div class="card-body"><div class="spark" id="chartTypesNon"></div><div class="mini-summary" id="summaryTypesNon"></div></div></div>
           </div>
         </div>
       <div class="insight-stats">
