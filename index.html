@@ -1007,6 +1007,9 @@
         const c = rec.properties?.c_ine ? String(rec.properties.c_ine) : '';
         if (c) layerState.byCine.set(`${c}::${def.id}`, rec);
       });
+      if (Array.isArray(data)) {
+        return L.layerGroup();
+      }
       const layer = L.geoJSON(data, {
         pane: def.pane,
         style: feature => {
