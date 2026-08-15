@@ -240,6 +240,10 @@
       <div class="insight-view" id="view-pid-types">
         <div class="hero"><h1>Información sobre tipologías de datos</h1></div>
         <div class="insights">
+          <div class="card" id="cardTypesTurIncrease">
+            <div class="card-header" onclick="toggleCard('cardTypesTurIncrease')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Incremento turístico por CCAA</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="turIncrease" checked> Vista</label></div>
+            <div class="card-body"><div class="spark" id="chartTurIncrease"></div><div class="mini-summary" id="summaryTurIncrease"></div></div>
+          </div>
           <div class="card" id="cardTypesTur"><div class="card-header" onclick="toggleCard('cardTypesTur')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Datos turísticos</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="typesTur" checked> Vista</label></div><div class="card-body"><div class="spark" id="chartTypesTur"></div><div class="mini-summary" id="summaryTypesTur"></div></div></div>
           <div class="card" id="cardTypesNon"><div class="card-header" onclick="toggleCard('cardTypesNon')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Datos no ontológicos</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="typesNon" checked> Vista</label></div><div class="card-body"><div class="spark" id="chartTypesNon"></div><div class="mini-summary" id="summaryTypesNon"></div></div></div>
         </div>
@@ -962,6 +966,14 @@
       const nonDef = layerState.items.find(d => d.id === 'non');
       const turFeatures = turDef?.data?.features || [];
       const nonFeatures = nonDef?.data?.features || [];
+      const turByCaa = turFeatures.reduce((acc, f) => {
+        const delta = extractNumericMetric(turDef, f.properties || {});
+        const cene = String(f?.properties?.c_ine || '');
+        const muni = state.municipios.find(m => String(m?.properties?.c_ine || '') === cene);
+        const caa = muni?.properties?.n_auton || 'Sin comunidad';
+        acc[caa] = (acc[caa] || 0) + delta;
+        return acc;
+      }, {});
       const turEntries = topMetricEntries(
         turFeatures,
         f => extractNumericMetric(turDef, f.properties || {}),
@@ -972,6 +984,9 @@
         f => extractNumericMetric(nonDef, f.properties || {}),
         f => extractFeatureLabel(f.properties)
       );
+      const turIncreaseEntries = Object.entries(turByCaa).sort((a,b)=>b[1]-a[1]);
+      bars('chartTurIncrease', turIncreaseEntries, [chartPalette[0], chartPalette[1], chartPalette[2], chartPalette[3], chartPalette[4], chartPalette[5]]);
+      setSummaryChips('summaryTurIncrease', turIncreaseEntries.slice(0, 3));
       bars('chartTypesTur', turEntries, [chartPalette[3], chartPalette[2], chartPalette[1], chartPalette[0], chartPalette[4], chartPalette[5]]);
       bars('chartTypesNon', nonEntries, [chartPalette[5], chartPalette[4], chartPalette[3], chartPalette[2], chartPalette[1], chartPalette[0]]);
       setSummaryChips('summaryTypesTur', turEntries.slice(0, 3));
