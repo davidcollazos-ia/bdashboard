@@ -44,6 +44,10 @@
     .insight-btn .ico{font-size:18px;line-height:1}
     .insight-btn:hover{transform:translateX(-2px);box-shadow:0 10px 18px rgba(31,41,55,.08);border-color:#e9d8e7}
     .insight-btn.active{background:linear-gradient(180deg,rgba(193,61,131,.12),rgba(245,158,11,.10));border-color:rgba(193,61,131,.22);color:var(--brand)}
+    .insight-stats{margin-top:auto;display:grid;gap:8px;padding-top:8px}
+    .insight-stat{padding:8px 6px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(180deg,#fffdfd,#fcf3ea);text-align:center}
+    .insight-stat .n{display:block;font-size:15px;font-weight:800;color:var(--brand-2);line-height:1.05}
+    .insight-stat .l{display:block;margin-top:3px;font-size:9px;line-height:1.15;color:var(--muted)}
     .insight-panel{position:absolute;right:74px;top:0;width:360px;height:calc(100vh - 32px);display:none;flex-direction:column;overflow-y:auto !important;overflow-x:hidden;overscroll-behavior:contain;scrollbar-gutter:stable;background:var(--panel-strong);border-radius:var(--radius-lg);box-shadow:var(--shadow);border:1px solid var(--line);backdrop-filter:blur(12px)}
     .insight-panel.active{display:flex}
     .insight-view{display:none;flex-direction:column;min-height:100%}
@@ -243,6 +247,11 @@
         <span class="ico">◉</span>
         <span>Datos</span>
       </button>
+      <div class="insight-stats">
+        <div class="insight-stat"><span class="n" id="extraVisiblePct">0%</span><span class="l">cobertura visible</span></div>
+        <div class="insight-stat"><span class="n" id="extraCountries">0</span><span class="l">municipios visibles</span></div>
+        <div class="insight-stat"><span class="n" id="extraProvinces">0</span><span class="l">provincias visibles</span></div>
+      </div>
     </div>
     <div class="insight-panel">
       <div class="insight-view" id="view-pid-data">
@@ -269,7 +278,6 @@
             <div class="card-body"><div class="spark" id="chartDiagnosis2"></div><div class="mini-summary" id="summaryDiagnosis2"></div></div>
           </div>
         </div>
-        <div class="bottom-strip"><h4>Indicadores</h4><div class="bottom-grid"><div class="bottom-stat"><div class="n" id="extraVisiblePct">0%</div><div class="l">cobertura visible</div></div><div class="bottom-stat"><div class="n" id="extraCountries">0</div><div class="l">municipios visibles</div></div><div class="bottom-stat"><div class="n" id="extraProvinces">0</div><div class="l">provincias visibles</div></div></div></div>
       </div>
       <div class="insight-view" id="view-pid-usage">
         <div class="hero"><h1>Información del uso de la PID</h1></div>
