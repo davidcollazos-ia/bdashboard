@@ -1068,6 +1068,7 @@
       );
       const provinceSelect = document.getElementById('provinceSelect');
       const municipalitySelect = document.getElementById('municipalitySelect');
+      if (!provinceSelect || !municipalitySelect) return;
       provinceSelect.innerHTML = '<option value="">Todas</option>' + provinces.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('');
       municipalitySelect.innerHTML = (state.province
         ? '<option value="">Todos</option>' + municipalities.map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join('')
@@ -1453,18 +1454,18 @@
       refreshGeoLayers();
       renderFilters();
       renderMarkers();
-      document.getElementById('tableClose').addEventListener('click', closeTableLayer);
-      document.getElementById('tableSearch').addEventListener('input', e => {
+      document.getElementById('tableClose')?.addEventListener('click', closeTableLayer);
+      document.getElementById('tableSearch')?.addEventListener('input', e => {
         state.table.search = e.target.value || '';
         state.table._zoomed = false;
         renderTablePanel();
       });
-      document.getElementById('tableFieldFilter').addEventListener('change', e => {
+      document.getElementById('tableFieldFilter')?.addEventListener('change', e => {
         state.table.field = e.target.value || '__all__';
         state.table._zoomed = false;
         renderTablePanel();
       });
-      document.getElementById('tableSort').addEventListener('change', e => {
+      document.getElementById('tableSort')?.addEventListener('change', e => {
         state.table.sort = e.target.value || '';
         renderTablePanel();
       });
@@ -1487,31 +1488,31 @@
     });
 
     map.on('zoomend moveend', renderDashboard);
-    document.getElementById('provinceSelect').addEventListener('change', e => {
+    document.getElementById('provinceSelect')?.addEventListener('change', e => {
       state.province = e.target.value;
       state.municipality = '';
       renderFilters();
       renderDashboard();
       renderMarkers(true);
     });
-    document.getElementById('municipalitySelect').addEventListener('change', e => {
+    document.getElementById('municipalitySelect')?.addEventListener('change', e => {
       state.municipality = e.target.value;
       renderDashboard();
       renderMarkers(true);
     });
-    document.getElementById('clearFiltersBtn').addEventListener('click', () => {
+    document.getElementById('clearFiltersBtn')?.addEventListener('click', () => {
       state.province = '';
       state.municipality = '';
       renderFilters();
       renderDashboard();
       renderMarkers(true);
     });
-    document.getElementById('showAllLayers').addEventListener('click', () => {
+    document.getElementById('showAllLayers')?.addEventListener('click', () => {
       layerState.items.forEach(def => def.visible = true);
       renderLayersList();
       refreshGeoLayers();
     });
-    document.getElementById('hideAllLayers').addEventListener('click', () => {
+    document.getElementById('hideAllLayers')?.addEventListener('click', () => {
       layerState.items.forEach((def, idx) => def.visible = idx < 2);
       renderLayersList();
       refreshGeoLayers();
