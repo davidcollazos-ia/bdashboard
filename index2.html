@@ -1212,8 +1212,9 @@
       const defs = getLayerDefs();
       layerState.items = defs;
 
-      const [munData, ptsData, usoData, modsData, turData, nonData, gestData] = await Promise.all([
+      const [munData, munCleanData, ptsData, usoData, modsData, turData, nonData, gestData] = await Promise.all([
         loadGeoJson(defs[0].url),
+        loadGeoJson('./municipios_clean.geojson'),
         loadGeoJson(defs[1].url),
         loadGeoJson(defs[2].url),
         loadGeoJson(defs[3].url),
@@ -1226,7 +1227,7 @@
       defs[4].data = turData;
       defs[5].data = nonData;
       defs[6].data = gestData;
-      state.municipios = Array.isArray(munData.features) ? munData.features : [];
+      state.municipios = Array.isArray(munCleanData.features) ? munCleanData.features : [];
       state.municipios.forEach(feature => {
         const p = feature.properties || {};
         const key = normalizeKey(p.n_mun || p.name || p.municipio);
