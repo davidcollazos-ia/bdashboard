@@ -126,13 +126,9 @@
     .insights{padding:14px;display:flex;flex-direction:column;gap:12px;flex:1 1 auto;min-height:0}
     .insights > .card:first-child{margin-top:2px}
     .card{border:1px solid #e9d8e7;border-radius:14px;background:#fffdfa;overflow:hidden;box-shadow:0 6px 14px rgba(31,41,55,.04)}
-    .card.dragging{opacity:.55;transform:scale(.995)}
-    .card-header{padding:8px 10px;display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:grab;background:linear-gradient(180deg,#fffdfd,#fcf3ea);border-bottom:1px solid #f0e5ef}
-    .card-header:active{cursor:grabbing}
+    .card-header{padding:8px 10px;display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer;background:linear-gradient(180deg,#fffdfd,#fcf3ea);border-bottom:1px solid #f0e5ef}
     .card-header h3{margin:0;font-size:13px;color:var(--ink);font-weight:800;letter-spacing:.01em}
     .card-title-wrap{display:flex;align-items:center;gap:8px;min-width:0;flex:1}
-    .card-grip{font-size:0;line-height:1;color:var(--muted);user-select:none;width:16px;text-align:center;flex:0 0 auto}
-    .card-grip::before{content:'⋮⋮';letter-spacing:-1px;font-size:16px;display:block}
     .card-toggle{font-size:0;color:transparent;line-height:1;display:flex;align-items:center;justify-content:center;width:18px;height:18px;flex:0 0 auto;position:relative}
     .card-toggle::before{content:'';width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid var(--muted);transition:transform .15s ease,border-color .15s ease}
     .card:not(.collapsed) .card-toggle::before{transform:rotate(180deg)}
@@ -1126,48 +1122,6 @@
       const collapsed = card.classList.toggle('collapsed');
     }
 
-    function enhanceInsightCards(){
-      document.querySelectorAll('.insights').forEach(list => {
-        list.querySelectorAll('.card').forEach(card => {
-          if (card.dataset.enhanced === '1') return;
-          card.dataset.enhanced = '1';
-          card.draggable = true;
-          const header = card.querySelector('.card-header');
-          const mode = card.querySelector('.card-mode');
-          if (header && !header.querySelector('.card-grip')) {
-            const grip = document.createElement('span');
-            grip.className = 'card-grip';
-            grip.title = 'Arrastrar';
-            grip.setAttribute('aria-hidden', 'true');
-            header.prepend(grip);
-          }
-          if (mode) mode.title = 'Mostrar u ocultar';
-          card.addEventListener('dragstart', e => {
-            card.classList.add('dragging');
-            e.dataTransfer.effectAllowed = 'move';
-          });
-          card.addEventListener('dragend', () => {
-            card.classList.remove('dragging');
-          });
-          card.addEventListener('dragover', e => e.preventDefault());
-          card.addEventListener('drop', e => {
-            e.preventDefault();
-            const dragging = list.querySelector('.card.dragging');
-            if (!dragging || dragging === card) return;
-            const cards = Array.from(list.querySelectorAll('.card'));
-            const fromIndex = cards.indexOf(dragging);
-            const toIndex = cards.indexOf(card);
-            if (fromIndex < 0 || toIndex < 0) return;
-            if (fromIndex < toIndex) {
-              list.insertBefore(dragging, card.nextSibling);
-            } else {
-              list.insertBefore(dragging, card);
-            }
-          });
-        });
-      });
-    }
-
     function refreshGeoLayers(){
       layerState.items.forEach(def => {
         if (!def.layer) return;
@@ -1290,7 +1244,6 @@
     }));
     window.pidSwitchIdentifyTab = (btn, targetId) => switchIdentifyTab(btn.closest('.popup'), targetId);
     window.pidSwitchInsightView = switchInsightView;
-    enhanceInsightCards();
   </script>
 </body>
 </html>
