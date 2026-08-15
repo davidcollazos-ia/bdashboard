@@ -1126,9 +1126,13 @@
       renderInsights(inView.length ? inView : filtered);
     }
 
-    function renderMarkers(){
+    function renderMarkers(fitToSelection = false){
       const visible = state.points.filter(passes);
       renderDashboard();
+      if (fitToSelection) {
+        const bounds = L.latLngBounds(visible.map(d => [d.lat, d.lng]));
+        if (bounds.isValid()) map.fitBounds(bounds.pad(0.12));
+      }
     }
 
     function toggleFilter(type, cb){}
@@ -1234,17 +1238,17 @@
       state.province = e.target.value;
       state.municipality = '';
       renderFilters();
-      renderMarkers();
+      renderMarkers(true);
     });
     document.getElementById('municipalitySelect').addEventListener('change', e => {
       state.municipality = e.target.value;
-      renderMarkers();
+      renderMarkers(true);
     });
     document.getElementById('clearFiltersBtn').addEventListener('click', () => {
       state.province = '';
       state.municipality = '';
       renderFilters();
-      renderMarkers();
+      renderMarkers(true);
     });
     document.getElementById('showAllLayers').addEventListener('click', () => {
       layerState.items.forEach(def => def.visible = true);
