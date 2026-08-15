@@ -68,9 +68,6 @@
     .filters{padding:12px 14px 16px;overflow:auto}
     .block{border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-bottom:12px;background:#fffdf9;box-shadow:0 8px 20px rgba(31,41,55,.04)}
     .block h2{margin:0;padding:12px 14px;font-size:13px;color:var(--ink);background:linear-gradient(180deg,#fbf7fb,#f2e7f3);border-bottom:1px solid var(--line);font-weight:800;letter-spacing:.01em}
-    .block-title{display:flex;align-items:center;gap:10px;padding:12px 14px;background:linear-gradient(180deg,#fbf7fb,#f2e7f3);border-bottom:1px solid var(--line)}
-    .block-title h2{padding:0;background:none;border-bottom:0;flex:0 0 auto}
-    .block-title img{height:26px;width:auto;display:block;flex:0 0 auto;object-fit:contain}
     .block .content{padding:12px 14px;max-height:190px;overflow:auto}
     .block.capas .content{max-height:none;overflow:visible}
     .actions{display:flex;gap:10px;margin-bottom:10px;font-size:11px}
@@ -188,14 +185,11 @@
   <div class="panel sidebar">
     <div class="hero">
       <h1>Información de uso de la PID</h1>
-      <img src="./assets/pid-logo-white.png" alt="Plataforma inteligente de destinos">
+      <img src="./assets/pid-logo.png" alt="Plataforma inteligente de destinos">
     </div>
     <div class="filters">
       <div class="block capas">
-        <div class="block-title">
-          <h2>Capas del mapa</h2>
-          <img src="./assets/pid-logo.png" alt="Plataforma inteligente de destinos">
-        </div>
+        <h2>Capas del mapa</h2>
         <div class="content">
           <div class="actions" style="margin-top:10px">
             <button type="button" id="showAllLayers">Mostrar todas</button>
