@@ -985,6 +985,9 @@
       document.getElementById('extraCountries').textContent = uniqueSorted(visiblePoints.map(d => d.municipio)).length;
       document.getElementById('extraProvinces').textContent = uniqueSorted(visiblePoints.map(d => d.provincia)).length;
 
+      const usoDef = layerState.items.find(d => d.id === 'uso');
+      const modsDef = layerState.items.find(d => d.id === 'mods');
+      const gestDef = layerState.items.find(d => d.id === 'gest');
       const turDef = layerState.items.find(d => d.id === 'tur');
       const nonDef = layerState.items.find(d => d.id === 'non');
       const turFeatures = turDef?.data?.features || [];
@@ -1003,6 +1006,24 @@
         acc[caa] = (acc[caa] || 0) + delta;
         return acc;
       }, {});
+      const usoFeatures = usoDef?.data?.features || [];
+      const modsFeatures = modsDef?.data?.features || [];
+      const gestFeatures = gestDef?.data?.features || [];
+      const usoEntries = topMetricEntries(
+        usoFeatures.filter(f => !visibleCines.size || visibleCines.has(String(f?.properties?.c_ine || ''))),
+        f => extractNumericMetric(usoDef, f.properties || {}),
+        f => extractFeatureLabel(f.properties)
+      );
+      const modsEntries = topMetricEntries(
+        modsFeatures.filter(f => !visibleCines.size || visibleCines.has(String(f?.properties?.c_ine || ''))),
+        f => extractNumericMetric(modsDef, f.properties || {}),
+        f => extractFeatureLabel(f.properties)
+      );
+      const gestEntries = topMetricEntries(
+        gestFeatures.filter(f => !visibleCines.size || visibleCines.has(String(f?.properties?.c_ine || ''))),
+        f => extractNumericMetric(gestDef, f.properties || {}),
+        f => extractFeatureLabel(f.properties)
+      );
       const turEntries = topMetricEntries(
         turFeatures.filter(f => !visibleCines.size || visibleCines.has(String(f?.properties?.c_ine || ''))),
         f => extractNumericMetric(turDef, f.properties || {}),
@@ -1016,6 +1037,12 @@
       const turIncreaseEntries = Object.entries(turByCaa).sort((a,b)=>b[1]-a[1]);
       bars('chartTurIncrease', turIncreaseEntries, [chartPalette[0], chartPalette[1], chartPalette[2], chartPalette[3], chartPalette[4], chartPalette[5]]);
       setSummaryChips('summaryTurIncrease', turIncreaseEntries.slice(0, 3));
+      bars('chartUsageUsers', usoEntries, chartPalette);
+      bars('chartUsageModules', modsEntries, chartPalette.slice().reverse());
+      bars('chartUsageDest', gestEntries, [chartPalette[1], chartPalette[2], chartPalette[3], chartPalette[4], chartPalette[5], chartPalette[0]]);
+      setSummaryChips('summaryUsageUsers', usoEntries.slice(0, 3));
+      setSummaryChips('summaryUsageModules', modsEntries.slice(0, 3));
+      setSummaryChips('summaryUsageDest', gestEntries.slice(0, 3));
       bars('chartTypesTur', turEntries, [chartPalette[3], chartPalette[2], chartPalette[1], chartPalette[0], chartPalette[4], chartPalette[5]]);
       bars('chartTypesNon', nonEntries, [chartPalette[5], chartPalette[4], chartPalette[3], chartPalette[2], chartPalette[1], chartPalette[0]]);
       setSummaryChips('summaryTypesTur', turEntries.slice(0, 3));
