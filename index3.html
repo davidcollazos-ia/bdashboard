@@ -1489,6 +1489,7 @@
 
     renderLayerLegend();
     renderLayersList();
+    switchInsightView('pid-data');
 
     map.on('zoomend moveend', renderDashboard);
     document.getElementById('provinceSelect').addEventListener('change', e => {
