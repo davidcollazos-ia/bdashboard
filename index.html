@@ -83,7 +83,39 @@
     .layer-meta{min-width:0;flex:1;display:flex;align-items:center;gap:8px}
     .layer-name{font-weight:800;font-size:12px;color:var(--ink);line-height:1.2;flex:1;min-width:0}
     .layer-body{padding:8px 10px 9px;display:grid;gap:7px}
-    .layer-toggle{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#334155;white-space:nowrap}
+    .layer-toggle{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#334155;white-space:nowrap}
+    .layer-toggle input{
+      appearance:none;
+      -webkit-appearance:none;
+      width:30px;
+      height:18px;
+      border-radius:999px;
+      background:#d9c7d8;
+      border:1px solid #cfb8ce;
+      position:relative;
+      outline:none;
+      cursor:pointer;
+      transition:background .15s ease,border-color .15s ease,box-shadow .15s ease;
+      flex:0 0 auto;
+    }
+    .layer-toggle input::before{
+      content:'';
+      position:absolute;
+      top:1px;
+      left:1px;
+      width:14px;
+      height:14px;
+      border-radius:50%;
+      background:#fff;
+      box-shadow:0 2px 6px rgba(31,41,55,.18);
+      transition:transform .15s ease,background .15s ease;
+    }
+    .layer-toggle input:checked{
+      background:linear-gradient(90deg,var(--brand),var(--brand-2));
+      border-color:rgba(143,58,127,.35);
+    }
+    .layer-toggle input:checked::before{transform:translateX(12px)}
+    .layer-toggle input:focus-visible{box-shadow:0 0 0 3px rgba(193,61,131,.18)}
     .layer-legend{border-top:1px dashed #eadfeb;padding-top:8px;display:none;gap:6px}
     .layer-card.expanded .layer-legend{display:grid}
     .legend-btn{border:1px solid #e6d8e4;background:#fff;border-radius:999px;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:0;font-weight:700;color:var(--brand);cursor:pointer;flex:0 0 auto;padding:0;line-height:1;position:relative}
@@ -152,13 +184,11 @@
   <div class="panel sidebar">
     <div class="hero">
       <h1>PID Dashboard</h1>
-      <p>Polígonos municipales y puntos clusterizados en una sola vista.</p>
     </div>
     <div class="filters">
       <div class="block capas">
         <h2>Capas del mapa</h2>
         <div class="content">
-          <div class="note">Activa, reordena y ajusta la transparencia de cada capa. Las leyendas están plegadas por defecto.</div>
           <div class="actions" style="margin-top:10px">
             <button type="button" id="showAllLayers">Mostrar todas</button>
             <button type="button" id="hideAllLayers">Ocultar todas</button>
@@ -385,7 +415,7 @@
       return [
         {
           id:'mun',
-          label:'Municipios con join espacial',
+          label:'Municipios',
           subtitle:'Coropleta municipal base',
           kind:'geojson',
           url:'./municipios_puntos_join.geojson',
@@ -402,19 +432,19 @@
         },
         {
           id:'pts',
-          label:'GeoJSON de puntos',
+          label:'POIS',
           subtitle:'Clusters de recursos',
           kind:'points',
           url:'./seguimiento_PRO_20260727_123406.geojson',
           visible:true,
           pane:'pane-pts',
           legend:[
-            { label:'1-4 puntos', color:clusterColor(1), note:'Cluster pequeño' },
-            { label:'5-9 puntos', color:clusterColor(5), note:'Cluster bajo' },
-            { label:'10-24 puntos', color:clusterColor(10), note:'Cluster medio' },
-            { label:'25-49 puntos', color:clusterColor(25), note:'Cluster alto' },
-            { label:'50-99 puntos', color:clusterColor(50), note:'Cluster muy alto' },
-            { label:'100+ puntos', color:clusterColor(100), note:'Cluster masivo' }
+            { label:'1-4', color:clusterColor(1), note:'' },
+            { label:'5-9', color:clusterColor(5), note:'' },
+            { label:'10-24', color:clusterColor(10), note:'' },
+            { label:'25-49', color:clusterColor(25), note:'' },
+            { label:'50-99', color:clusterColor(50), note:'' },
+            { label:'100+', color:clusterColor(100), note:'' }
           ]
         },
         {
@@ -537,14 +567,13 @@
               <div class="layer-name">${esc(def.label)}</div>
               <label class="layer-toggle" title="Mostrar u ocultar">
                 <input type="checkbox" ${def.visible ? 'checked' : ''} data-action="toggle">
-                Visible
               </label>
             </div>
             <button type="button" class="legend-btn" data-action="legend" title="Mostrar u ocultar leyenda">⌄</button>
           </div>
           <div class="layer-body">
             <div class="layer-legend">
-              ${def.legend.map(item => `<div class="legend-item"><div class="legend-left"><span class="legend-swatch" style="background:${item.color}"></span><span class="legend-label">${esc(item.label)}</span></div><span class="legend-value">${esc(item.note)}</span></div>`).join('')}
+              ${def.legend.map(item => `<div class="legend-item"><div class="legend-left"><span class="legend-swatch" style="background:${item.color}"></span><span class="legend-label">${esc(item.label)}</span></div>${item.note ? `<span class="legend-value">${esc(item.note)}</span>` : ''}</div>`).join('')}
             </div>
           </div>
         `;
