@@ -241,7 +241,7 @@
         <div class="hero"><h1>Información sobre tipologías de datos</h1></div>
         <div class="insights">
           <div class="card" id="cardTypesTurIncrease">
-            <div class="card-header" onclick="toggleCard('cardTypesTurIncrease')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Incremento turístico por CCAA</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="turIncrease" checked> Vista</label></div>
+            <div class="card-header" onclick="toggleCard('cardTypesTurIncrease')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Incremento turístico por CCAA</h3></div></div>
             <div class="card-body"><div class="spark" id="chartTurIncrease"></div><div class="mini-summary" id="summaryTurIncrease"></div></div>
           </div>
           <div class="card" id="cardTypesTur"><div class="card-header" onclick="toggleCard('cardTypesTur')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Datos turísticos</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="typesTur" checked> Vista</label></div><div class="card-body"><div class="spark" id="chartTypesTur"></div><div class="mini-summary" id="summaryTypesTur"></div></div></div>
@@ -966,6 +966,13 @@
       const nonDef = layerState.items.find(d => d.id === 'non');
       const turFeatures = turDef?.data?.features || [];
       const nonFeatures = nonDef?.data?.features || [];
+      const visibleMunKeys = new Set(visiblePoints.map(p => normalizeKey(p.municipio)));
+      const visibleCines = new Set(
+        state.municipios
+          .filter(f => visibleMunKeys.has(normalizeKey(f?.properties?.n_mun || f?.properties?.name || f?.properties?.municipio)))
+          .map(f => String(f?.properties?.c_ine || ''))
+          .filter(Boolean)
+      );
       const turByCaa = turFeatures.reduce((acc, f) => {
         const delta = extractNumericMetric(turDef, f.properties || {});
         const cene = String(f?.properties?.c_ine || '');
@@ -975,12 +982,12 @@
         return acc;
       }, {});
       const turEntries = topMetricEntries(
-        turFeatures,
+        turFeatures.filter(f => !visibleCines.size || visibleCines.has(String(f?.properties?.c_ine || ''))),
         f => extractNumericMetric(turDef, f.properties || {}),
         f => extractFeatureLabel(f.properties)
       );
       const nonEntries = topMetricEntries(
-        nonFeatures,
+        nonFeatures.filter(f => !visibleCines.size || visibleCines.has(String(f?.properties?.c_ine || ''))),
         f => extractNumericMetric(nonDef, f.properties || {}),
         f => extractFeatureLabel(f.properties)
       );
