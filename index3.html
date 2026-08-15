@@ -190,8 +190,9 @@
     .identify-summary .meta{grid-template-columns:repeat(2, minmax(0, 1fr))}
     .identify-panel .meta{grid-template-columns:repeat(2, minmax(0, 1fr))}
     .identify-label{display:inline-block;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:6px}
-    .table-drawer{position:fixed;left:390px;right:92px;bottom:0;height:25vh;min-height:220px;max-height:34vh;z-index:950;display:none;flex-direction:column;background:rgba(255,255,255,.98);border:1px solid var(--line);border-bottom:none;border-radius:18px 18px 0 0;box-shadow:0 -12px 30px rgba(31,41,55,.14);backdrop-filter:blur(12px);overflow:hidden}
+    .table-drawer{position:fixed;left:390px;right:92px;bottom:0;height:25vh;min-height:220px;max-height:34vh;z-index:950;display:none;flex-direction:column;background:rgba(255,255,255,.98);border:1px solid var(--line);border-bottom:none;border-radius:18px 18px 0 0;box-shadow:0 -12px 30px rgba(31,41,55,.14);backdrop-filter:blur(12px);overflow:hidden;transition:left .2s ease,right .2s ease,width .2s ease,height .2s ease,max-height .2s ease}
     .table-drawer.active{display:flex}
+    .table-drawer.expanded{left:16px;right:16px;height:34vh;max-height:44vh}
     .table-drawer-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-bottom:1px solid #f0e5ef;background:linear-gradient(180deg,#fffdfd,#f8f0f6)}
     .table-drawer-title{display:flex;align-items:center;gap:8px;min-width:0}
     .table-drawer-title h4{margin:0;font-size:13px;color:var(--ink);font-weight:800}
@@ -199,6 +200,7 @@
     .table-drawer-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
     .table-search,.table-filter,.table-sort{border:1px solid var(--line);background:#fffdf9;border-radius:10px;padding:6px 8px;font:inherit;font-size:11px;color:var(--ink)}
     .table-search{min-width:180px}
+    .table-expand{border:1px solid rgba(193,61,131,.18);background:linear-gradient(180deg,rgba(193,61,131,.08),rgba(245,158,11,.08));color:var(--brand);border-radius:10px;padding:6px 10px;font:inherit;font-size:11px;font-weight:700;cursor:pointer}
     .table-close{border:1px solid rgba(193,61,131,.18);background:linear-gradient(180deg,rgba(193,61,131,.08),rgba(245,158,11,.08));color:var(--brand);border-radius:10px;padding:6px 10px;font:inherit;font-size:11px;font-weight:700;cursor:pointer}
     .table-drawer-body{min-height:0;flex:1 1 auto;overflow:auto;padding:10px 12px}
     .table-shell{min-width:100%;border-collapse:separate;border-spacing:0 6px;font-size:11px}
@@ -245,6 +247,7 @@
         <input type="search" class="table-search" id="tableSearch" placeholder="Buscar en la tabla">
         <select class="table-filter" id="tableFieldFilter"></select>
         <select class="table-sort" id="tableSort"></select>
+        <button type="button" class="table-expand" id="tableExpand">Expandir</button>
         <button type="button" class="table-close" id="tableClose">Cerrar</button>
       </div>
     </div>
@@ -783,15 +786,27 @@
       state.table.field = '__all__';
       state.table.sort = '';
       state.table.dir = 'asc';
+      state.table._zoomed = false;
       document.getElementById('tableSearch').value = '';
       document.getElementById('tableDrawer').classList.add('active');
+      document.getElementById('tableDrawer').classList.remove('expanded');
+      document.getElementById('tableExpand').textContent = 'Expandir';
       renderTablePanel();
     }
 
     function closeTableLayer(){
       state.table.layerId = '';
       document.getElementById('tableDrawer').classList.remove('active');
+      document.getElementById('tableDrawer').classList.remove('expanded');
       refreshGeoLayers();
+    }
+
+    function toggleTableDrawerExpand(){
+      const drawer = document.getElementById('tableDrawer');
+      const btn = document.getElementById('tableExpand');
+      const expanded = drawer.classList.toggle('expanded');
+      btn.textContent = expanded ? 'Restaurar' : 'Expandir';
+      renderTablePanel();
     }
 
     function renderTablePanel(){
@@ -804,6 +819,7 @@
       const def = layerState.items.find(d => d.id === state.table.layerId);
       if (!def) {
         drawer.classList.remove('active');
+        drawer.classList.remove('expanded');
         body.innerHTML = '';
         title.textContent = 'Tabla de capa';
         sub.textContent = '';
@@ -1459,6 +1475,7 @@
       renderFilters();
       renderMarkers();
       document.getElementById('tableClose').addEventListener('click', closeTableLayer);
+      document.getElementById('tableExpand').addEventListener('click', toggleTableDrawerExpand);
       document.getElementById('tableSearch').addEventListener('input', e => {
         state.table.search = e.target.value || '';
         state.table._zoomed = false;
