@@ -693,6 +693,14 @@
       }));
     }
 
+    function collectAllKeys(records){
+      const keys = new Set();
+      (records || []).forEach(record => {
+        Object.keys(recordProps(record)).forEach(key => keys.add(key));
+      });
+      return Array.from(keys);
+    }
+
     function recordProps(record){
       return record?.properties || record || {};
     }
@@ -709,11 +717,10 @@
     }
 
     function tableColumnsForDef(def){
-      if (def.kind === 'points') return ['title','municipio','provincia','clase','lat','lng'];
-      const first = (def.records || []).find(r => r?.properties);
-      const keys = first ? Object.keys(first.properties).filter(k => k !== 'geometry') : [];
-      const preferred = ['c_ine','n_mun','n_prov','n_auton','provincia','title','name','clase'];
-      return Array.from(new Set([...preferred, ...keys])).slice(0, 10);
+      const preferred = ['c_ine','n_mun','n_prov','n_auton','provincia','title','name','clase','municipio','lat','lng','uri','source_file'];
+      const pointKeys = def.kind === 'points' ? ['title','municipio','provincia','clase','lat','lng','uri','source_file','name'] : [];
+      const keys = collectAllKeys(def.records || []);
+      return Array.from(new Set([...preferred, ...pointKeys, ...keys])).filter(Boolean);
     }
 
     function valueForColumn(def, record, key){
@@ -755,6 +762,19 @@
       const v = valueForColumn(def, record, key);
       const n = parseNum(v);
       return Number.isFinite(n) ? n : normalizeText(v).toLowerCase();
+    }
+
+    function zoomToTableRows(def, rows){
+      const coords = [];
+      rows.slice(0, 80).forEach(record => {
+        if (def.kind === 'points') {
+          if (Number.isFinite(record?.lat) && Number.isFinite(record?.lng)) coords.push([record.lat, record.lng]);
+          return;
+        }
+        const center = geometryCenter(record?.geometry);
+        if (center) coords.push([center[1], center[0]]);
+      });
+      if (coords.length) map.fitBounds(L.latLngBounds(coords).pad(0.15));
     }
 
     function setTableLayer(layerId){
@@ -809,8 +829,14 @@
       });
       if (!sorted.length) {
         body.innerHTML = '<div class="table-empty">No hay registros para mostrar con los filtros actuales.</div>';
+        sub.textContent = '0 registros visibles';
         return;
       }
+      if (state.table.search && !state.table._zoomed) {
+        zoomToTableRows(def, sorted);
+        state.table._zoomed = true;
+      }
+      if (!state.table.search) state.table._zoomed = false;
       const thead = `<thead><tr>${columns.map(k => `<th data-col="${esc(k)}">${esc(k)}</th>`).join('')}</tr></thead>`;
       const tbody = `<tbody>${sorted.map(record => `<tr>${columns.map(k => `<td title="${esc(valueForColumn(def, record, k))}">${esc(valueForColumn(def, record, k))}</td>`).join('')}</tr>`).join('')}</tbody>`;
       body.innerHTML = `<table class="table-shell">${thead}${tbody}</table>`;
@@ -820,10 +846,8 @@
           if (state.table.sort === col) state.table.dir = state.table.dir === 'asc' ? 'desc' : 'asc';
           else { state.table.sort = col; state.table.dir = 'asc'; }
           renderTablePanel();
-          refreshGeoLayers();
         });
       });
-      refreshGeoLayers();
     }
 
     function htmlForMetaPairs(entries, emptyText='Sin datos'){
@@ -1326,7 +1350,6 @@
       const filtered = state.points.filter(passes);
       const inView = filtered.filter(inBounds);
       renderInsights(inView.length ? inView : filtered);
-      if (state.table.layerId) renderTablePanel();
     }
 
     function renderMarkers(fitToSelection = false){
@@ -1438,10 +1461,12 @@
       document.getElementById('tableClose').addEventListener('click', closeTableLayer);
       document.getElementById('tableSearch').addEventListener('input', e => {
         state.table.search = e.target.value || '';
+        state.table._zoomed = false;
         renderTablePanel();
       });
       document.getElementById('tableFieldFilter').addEventListener('change', e => {
         state.table.field = e.target.value || '__all__';
+        state.table._zoomed = false;
         renderTablePanel();
       });
       document.getElementById('tableSort').addEventListener('change', e => {
