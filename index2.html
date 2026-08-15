@@ -955,9 +955,18 @@
     }
 
     function municipalityBoundsFromSelection(){
-      const selected = layerState.byMunName.get(normalizeKey(state.municipality));
-      if (!selected) return null;
-      const geom = selected.geometry;
+      const selected = state.municipios.find(feature => {
+        const p = feature.properties || {};
+        const names = [
+          p.n_mun,
+          p.municipio,
+          p.name,
+          p.nombre,
+          p.title
+        ].map(normalizeKey).filter(Boolean);
+        return names.includes(normalizeKey(state.municipality));
+      });
+      const geom = selected?.geometry;
       if (!geom || !geom.coordinates) return null;
       const coords = [];
       const walk = value => {
