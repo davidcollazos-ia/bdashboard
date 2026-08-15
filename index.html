@@ -869,6 +869,17 @@
         .slice(0, 6);
     }
 
+    function aggregateEntries(data, keyFn, valueFn, visibleFilter){
+      const acc = new Map();
+      (data || []).forEach(item => {
+        if (visibleFilter && !visibleFilter(item)) return;
+        const key = keyFn(item) || 'Sin dato';
+        const value = Number(valueFn(item) || 0);
+        acc.set(key, (acc.get(key) || 0) + value);
+      });
+      return Array.from(acc.entries()).sort((a, b) => b[1] - a[1]).slice(0, 6);
+    }
+
     function geometryCenter(geometry){
       if (!geometry || !geometry.coordinates) return null;
       const coords = [];
@@ -1014,15 +1025,17 @@
         f => extractNumericMetric(usoDef, f.properties || {}),
         f => extractFeatureLabel(f.properties)
       );
-      const modsEntries = topMetricEntries(
-        modsFeatures.filter(f => !visibleCines.size || visibleCines.has(String(f?.properties?.c_ine || ''))),
+      const modsEntries = aggregateEntries(
+        modsFeatures,
+        f => f?.properties?.['Solución Digital'] || 'Sin solución',
         f => extractNumericMetric(modsDef, f.properties || {}),
-        f => extractFeatureLabel(f.properties)
+        f => !visibleCines.size || visibleCines.has(String(f?.properties?.c_ine || ''))
       );
-      const gestEntries = topMetricEntries(
-        gestFeatures.filter(f => !visibleCines.size || visibleCines.has(String(f?.properties?.c_ine || ''))),
-        f => extractNumericMetric(gestDef, f.properties || {}),
-        f => extractFeatureLabel(f.properties)
+      const gestEntries = aggregateEntries(
+        gestFeatures,
+        f => f?.properties?.['Nombre Destino Gestor'] || f?.properties?.['Entidad Gestora Destino Gestor'] || 'Sin gestor',
+        f => 1,
+        f => !visibleCines.size || visibleCines.has(String(f?.properties?.c_ine || ''))
       );
       const turEntries = topMetricEntries(
         turFeatures.filter(f => !visibleCines.size || visibleCines.has(String(f?.properties?.c_ine || ''))),
