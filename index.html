@@ -318,35 +318,35 @@
     const firstNonEmpty = (...values) => values.map(normalizeText).find(Boolean) || '';
     const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
     const colorRamp = [
-      '#f7e6f2',
-      '#f2d3ea',
-      '#ebb8dd',
-      '#de91c7',
-      '#c96aad',
-      '#b14a91',
-      '#9a3c82',
-      '#7a2f67'
+      '#fce7f3',
+      '#fed7e8',
+      '#fdc6d8',
+      '#f7a8b8',
+      '#f59e0b',
+      '#fb923c',
+      '#ec7b2f',
+      '#c43c8a'
     ];
-    const chartPalette = ['#8f3a7f', '#c13d83', '#b14a91', '#de91c7', '#6d2f69', '#a85aa1'];
+    const chartPalette = ['#8f3a7f', '#c13d83', '#f59e0b', '#fb923c', '#b14a91', '#de91c7'];
 
     function clusterColor(count){
-      if (count >= 100) return '#5f1f56';
-      if (count >= 50) return '#7a2f67';
-      if (count >= 25) return '#8f3a7f';
-      if (count >= 10) return '#b14a91';
-      if (count >= 5) return '#c96aad';
+      if (count >= 100) return '#7c2d12';
+      if (count >= 50) return '#c2410c';
+      if (count >= 25) return '#ea580c';
+      if (count >= 10) return '#f59e0b';
+      if (count >= 5) return '#c13d83';
       return '#de91c7';
     }
 
     function metricPalette(name){
       const palette = {
-        'Uso de la PID':['#fff2f8','#fbc6e5','#f68ac8','#ec4da2','#d81b74','#a9155b'],
-        'Módulos Comunes':['#fff7e8','#fde6b0','#fdcb70','#faa43c','#f07a1e','#c9550d'],
-        'Datos Turísticos':['#effcf7','#caf7e4','#8feccd','#45d9ad','#16b88f','#0d8a6e'],
-        'Datos No ontológicos':['#f3f0ff','#ddd6ff','#bda9ff','#946efb','#6d41e9','#4f2cc0'],
-        'Destinos Gestores':['#fff1e8','#ffd3b5','#ffb06f','#ff8144','#ec591d','#ba4310']
+        'Uso de la PID':['#fff1f7','#fde0ef','#fdc2d7','#f59e0b','#fb923c','#ec4899'],
+        'Módulos Comunes':['#fff7e8','#fee7c7','#fdcb70','#f59e0b','#fb923c','#c9550d'],
+        'Datos Turísticos':['#effcf7','#d7f6e9','#a5eecf','#f59e0b','#fb923c','#0d8a6e'],
+        'Datos No ontológicos':['#f4f0ff','#e5dbff','#cfbdff','#f59e0b','#fb923c','#6d41e9'],
+        'Destinos Gestores':['#fff1e8','#ffd7bd','#ffb777','#f59e0b','#fb923c','#ba4310']
       };
-      return palette[name] || ['#f7e6f2','#f2d3ea','#ebb8dd','#de91c7','#c96aad','#b14a91'];
+      return palette[name] || ['#fce7f3','#fed7e8','#fdc6d8','#f59e0b','#fb923c','#c13d83'];
     }
 
     function parseNum(v){
@@ -398,7 +398,7 @@
       const value = metricValue(def, props);
       if (def.id === 'tur') {
         if (value < 0) return { fillColor:'#fb7185', fillOpacity:0.8, opacity:0.92, color:'#e11d48', weight:1 };
-        if (value === 0) return { fillColor:'#fde047', fillOpacity:0.78, opacity:0.92, color:'#ca8a04', weight:1 };
+        if (value === 0) return { fillColor:'#f59e0b', fillOpacity:0.78, opacity:0.92, color:'#c2410c', weight:1 };
         const absBucket = bucketize(Math.abs(value), [0, 1, 5, 10, 25, 50]);
         const idx = clamp(absBucket, 0, palette.length - 1);
         return { fillColor: palette[idx], fillOpacity:0.78, opacity:0.92, color: palette[Math.max(0, idx - 1)], weight:1 };
@@ -768,7 +768,7 @@
         })
       });
       pts.forEach(d => {
-        const marker = L.circleMarker([d.lat, d.lng], { radius:5, color:'#0b5cab', weight:2, fillColor:'#14b8a6', fillOpacity:.85 })
+        const marker = L.circleMarker([d.lat, d.lng], { radius:5, color:'#c2410c', weight:2, fillColor:'#fb923c', fillOpacity:.88 })
           .bindPopup(buildIdentifyPopup(d.title, null, d), { maxWidth:520, className:'identify-popup' });
         layer.addLayer(marker);
       });
@@ -890,7 +890,7 @@
       entries.slice(0, 6).forEach(([label, value], idx) => {
         const row = document.createElement('div');
         row.className = 'bar-row';
-        row.innerHTML = `<div><div class="bar-label" title="${esc(label)}">${esc(label)}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.max(2, (value / max) * 100)}%;background:linear-gradient(90deg, ${palette[idx % palette.length]}, rgba(193,61,131,.45))"></div></div></div><div class="bar-value">${value}</div>`;
+        row.innerHTML = `<div><div class="bar-label" title="${esc(label)}">${esc(label)}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.max(2, (value / max) * 100)}%;background:linear-gradient(90deg, ${palette[idx % palette.length]}, rgba(245,158,11,.55))"></div></div></div><div class="bar-value">${value}</div>`;
         el.appendChild(row);
       });
       if (!entries.length) el.innerHTML = '<div style="font-size:12px;color:#64748b">Sin datos</div>';
