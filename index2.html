@@ -1049,16 +1049,17 @@
     }
 
     function renderInsights(visiblePoints){
+      const visibleMunicipalities = state.municipios.filter(featureVisibleInMap);
       const scopePoints = chartScope('types') ? visiblePoints : state.points;
       const scopePois = chartScope('pois') ? visiblePoints : state.points;
       const scopeMun = chartScope('countries') ? visiblePoints : state.points;
       const scopeDiversidad = chartScope('diagnosis2') ? visiblePoints : state.points;
       const byClass = countBy(scopePoints, 'clase');
       const poisByClass = Object.entries(countBy(scopePois, 'clase')).map(([k, v]) => [k.replace(/^core#/, ''), v]).sort((a,b)=>b[1]-a[1]);
-      const byProvince = Object.entries(countBy(scopeMun, 'provincia')).sort((a,b)=>b[1]-a[1]).slice(0,8);
-      const muniTotals = state.municipios.map(f => [f?.properties?.n_mun || 'Sin nombre', Number(f?.properties?.total_puntos || 0)]).sort((a,b)=>b[1]-a[1]).slice(0,8);
+      const byProvince = Object.entries(countBy(visibleMunicipalities.map(f => f.properties || {}), 'provincia')).sort((a,b)=>b[1]-a[1]).slice(0,8);
+      const muniTotals = visibleMunicipalities.map(f => [f?.properties?.n_mun || 'Sin nombre', Number(f?.properties?.total_puntos || 0)]).sort((a,b)=>b[1]-a[1]).slice(0,8);
       const muniVariety = Object.entries(scopeDiversidad.reduce((acc, d) => { (acc[d.municipio] ||= new Set()).add(d.clase); return acc; }, {})).map(([k,v]) => [k, v.size]).sort((a,b)=>b[1]-a[1]).slice(0,8);
-      const totalMun = state.municipios.reduce((sum, f) => sum + Number(f?.properties?.total_puntos || 0), 0);
+      const totalMun = visibleMunicipalities.reduce((sum, f) => sum + Number(f?.properties?.total_puntos || 0), 0);
       const scopeLabel = chartScope('types') ? 'vista' : 'total';
 
       const classEntries = Object.entries(byClass)
@@ -1077,11 +1078,11 @@
       document.getElementById('summaryTypes').innerHTML = classEntries.slice(0,3).map(([k,v]) => `<span class="chip">${esc(k)}: ${v}</span>`).join('') || 'Sin datos';
       document.getElementById('summaryPois').innerHTML = poisByClass.slice(0,3).map(([k,v]) => `<span class="chip">${esc(k)}: ${v}</span>`).join('') || 'Sin datos';
       document.getElementById('summaryCountries').innerHTML = muniTotals.slice(0,3).map(([k,v]) => `<span class="chip">${esc(k)}: ${v}</span>`).join('') || 'Sin datos';
-      document.getElementById('summaryDiagnosis2').innerHTML = `<strong>${totalMun}</strong> puntos agregados en municipios y <strong>${visiblePoints.length}</strong> visibles en el mapa.`;
+      document.getElementById('summaryDiagnosis2').innerHTML = `<strong>${totalMun}</strong> puntos agregados en municipios y <strong>${visibleMunicipalities.length}</strong> municipios visibles en el mapa.`;
       document.getElementById('provinceChips').innerHTML = byProvince.map(([name, value]) => `<span class="chip">${esc(name)}: ${value}</span>`).join('') || '<div style="font-size:12px;color:#64748b">Sin datos</div>';
-      document.getElementById('extraVisiblePct').textContent = `${Math.round((visiblePoints.length / state.points.length) * 100)}%`;
-      document.getElementById('extraCountries').textContent = uniqueSorted(visiblePoints.map(d => d.municipio)).length;
-      document.getElementById('extraProvinces').textContent = uniqueSorted(visiblePoints.map(d => d.provincia)).length;
+      document.getElementById('extraVisiblePct').textContent = `${Math.round((visibleMunicipalities.length / Math.max(state.municipios.length, 1)) * 100)}%`;
+      document.getElementById('extraCountries').textContent = uniqueSorted(visibleMunicipalities.map(f => f?.properties?.n_mun || f?.properties?.municipio || f?.properties?.name)).length;
+      document.getElementById('extraProvinces').textContent = uniqueSorted(visibleMunicipalities.map(f => f?.properties?.provincia || f?.properties?.n_prov || f?.properties?.province)).length;
 
       const usoDef = layerState.items.find(d => d.id === 'uso');
       const modsDef = layerState.items.find(d => d.id === 'mods');
