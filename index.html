@@ -116,10 +116,12 @@
     .bottom-stat{background:#fffdf9;border:1px solid var(--line);border-radius:14px;padding:10px 12px}
     .bottom-stat .n{font-size:16px;font-weight:800;color:var(--brand-2)}
     .bottom-stat .l{font-size:11px;color:var(--muted)}
-    .popup{min-width:320px;max-width:380px}
-    .popup h3{margin:0 0 8px;font-size:15px;color:var(--brand-2)}
-    .meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px;color:#334155}
-    .meta div{background:#fffdfd;border:1px solid var(--line);border-radius:10px;padding:8px}
+    .leaflet-popup-content-wrapper{max-width:min(760px, calc(100vw - 40px));}
+    .leaflet-popup-content{margin:10px 12px;max-width:min(760px, calc(100vw - 40px));}
+    .popup{width:min(760px, calc(100vw - 40px));max-width:none}
+    .popup h3{margin:0 0 8px;font-size:15px;color:var(--brand-2);max-width:100%;overflow-wrap:anywhere}
+    .meta{display:grid;grid-template-columns:repeat(auto-fit, minmax(155px, 1fr));gap:8px;font-size:11px;color:#334155}
+    .meta div{background:#fffdfd;border:1px solid var(--line);border-radius:10px;padding:8px;min-width:0;overflow-wrap:anywhere;word-break:break-word}
     .meta b{display:block;font-size:9px;color:var(--muted);margin-bottom:2px;text-transform:uppercase;letter-spacing:.04em}
     .note{font-size:11px;color:var(--muted);line-height:1.4}
     .identify-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 8px}
@@ -127,7 +129,7 @@
     .identify-tab.active{background:rgba(143,58,127,.1);border-color:rgba(143,58,127,.24);color:var(--brand)}
     .identify-panel{display:none}
     .identify-panel.active{display:block}
-    .identify-summary{border:1px solid #eadfeb;border-radius:12px;padding:10px;background:#fffdfd}
+    .identify-summary{border:1px solid #eadfeb;border-radius:12px;padding:10px;background:#fffdfd;min-width:0;overflow:hidden}
     .identify-label{display:inline-block;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:6px}
     @media (max-width:1100px){.panel{width:320px}#map{left:340px;right:340px}.bottom-grid{grid-template-columns:1fr}}
     @media (max-width:900px){html,body{overflow:auto}#map{position:relative;left:0;right:0;height:52vh}.panel{position:relative;left:auto;right:auto;top:auto;width:auto;max-height:none;margin:12px 12px 0}}
