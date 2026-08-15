@@ -44,13 +44,13 @@
     .insight-btn.active{background:linear-gradient(180deg,rgba(193,61,131,.12),rgba(143,58,127,.08));border-color:rgba(193,61,131,.22);color:var(--brand)}
     .insight-panel{position:absolute;right:74px;top:0;width:360px;height:calc(100vh - 32px);display:flex;flex-direction:column;overflow-y:auto !important;overflow-x:hidden;overscroll-behavior:contain;scrollbar-gutter:stable;background:var(--panel-strong);border-radius:var(--radius-lg);box-shadow:var(--shadow);border:1px solid var(--line);backdrop-filter:blur(12px)}
     .insight-view{display:none;flex-direction:column;min-height:100%}
-    .insight-view.active{display:flex}
-    .hero{padding:18px;background:
+    .insight-view.active{display:flex;min-height:100%}
+    .hero{padding:20px 18px 24px;background:
       linear-gradient(135deg, #5f2b7a 0%, #8f3a7f 45%, #c13d83 100%);
       color:#fff;position:relative;overflow:hidden}
     .hero::before{content:'';position:absolute;inset:14px 14px auto auto;width:78px;height:78px;border-radius:50%;background:rgba(255,255,255,.08)}
     .hero::after{content:'';position:absolute;inset:auto -30% -70% 50%;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.10);filter:blur(2px)}
-    .hero h1{margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-size:28px;line-height:.94;letter-spacing:.01em}
+    .hero h1{margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-size:24px;line-height:1.04;letter-spacing:.01em;max-width:100%;overflow-wrap:anywhere}
     .hero p{margin:10px 0 0;font-size:12px;opacity:.9;line-height:1.45;max-width:30ch}
     .topbar{position:fixed;left:50%;top:16px;transform:translateX(-50%);z-index:1200;width:auto;max-width:min(860px,calc(100vw - 820px));display:flex;justify-content:center;pointer-events:auto}
     .filterbar{display:inline-flex;gap:8px;align-items:center;flex-wrap:nowrap;justify-content:flex-start;width:auto;background:rgba(255,251,255,.88);border:1px solid var(--line);border-radius:18px;padding:7px 8px;box-shadow:var(--shadow-soft);backdrop-filter:blur(14px)}
@@ -88,7 +88,8 @@
     .layer-card.expanded .layer-legend{display:grid}
     .legend-btn{border:1px solid #e6d8e4;background:#fff;border-radius:999px;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:0;font-weight:700;color:var(--brand);cursor:pointer;flex:0 0 auto;padding:0;line-height:1;position:relative}
     .legend-btn::before{content:'';width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid var(--brand)}
-    .insights{padding:14px;display:flex;flex-direction:column;gap:12px;flex:0 0 auto;min-height:0}
+    .insights{padding:14px;display:flex;flex-direction:column;gap:12px;flex:1 1 auto;min-height:0}
+    .insights > .card:first-child{margin-top:2px}
     .card{border:1px solid var(--line);border-radius:16px;background:#fffdf9;overflow:hidden;box-shadow:0 8px 20px rgba(31,41,55,.04)}
     .card-header{padding:11px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer;background:linear-gradient(180deg,#fbf7fb,#f2e7f3);border-bottom:1px solid var(--line)}
     .card-header h3{margin:0;font-size:13px;color:var(--ink);font-weight:800;letter-spacing:.01em}
@@ -191,7 +192,7 @@
     <div class="insight-rail">
       <button type="button" class="insight-btn active" data-view="pid-data" onclick="window.pidSwitchInsightView('pid-data')" title="Datos que contiene la PID">
         <span class="ico">◫</span>
-        <span>PID</span>
+        <span>Contenido</span>
       </button>
       <button type="button" class="insight-btn" data-view="pid-usage" onclick="window.pidSwitchInsightView('pid-usage')" title="Información del uso de la PID">
         <span class="ico">▣</span>
@@ -232,20 +233,20 @@
       <div class="insight-view" id="view-pid-usage">
         <div class="hero"><h1>Información del uso de la PID</h1></div>
         <div class="insights">
-          <div class="card" id="cardUsageUsers"><div class="card-header" onclick="toggleCard('cardUsageUsers')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Usuarios por municipio</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="usageUsers" checked> Vista</label></div><div class="card-body"><div class="spark" id="chartUsageUsers"></div><div class="mini-summary" id="summaryUsageUsers"></div></div></div>
-          <div class="card" id="cardUsageModules"><div class="card-header" onclick="toggleCard('cardUsageModules')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Módulos comunes</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="usageModules" checked> Vista</label></div><div class="card-body"><div class="spark" id="chartUsageModules"></div><div class="mini-summary" id="summaryUsageModules"></div></div></div>
-          <div class="card" id="cardUsageDest"><div class="card-header" onclick="toggleCard('cardUsageDest')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Destinos gestores</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="usageDest" checked> Vista</label></div><div class="card-body"><div class="spark" id="chartUsageDest"></div><div class="mini-summary" id="summaryUsageDest"></div></div></div>
+          <div class="card collapsed" id="cardUsageUsers"><div class="card-header" onclick="toggleCard('cardUsageUsers')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Usuarios por municipio</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="usageUsers" checked> Vista</label></div><div class="card-body"><div class="spark" id="chartUsageUsers"></div><div class="mini-summary" id="summaryUsageUsers"></div></div></div>
+          <div class="card collapsed" id="cardUsageModules"><div class="card-header" onclick="toggleCard('cardUsageModules')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Módulos comunes</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="usageModules" checked> Vista</label></div><div class="card-body"><div class="spark" id="chartUsageModules"></div><div class="mini-summary" id="summaryUsageModules"></div></div></div>
+          <div class="card collapsed" id="cardUsageDest"><div class="card-header" onclick="toggleCard('cardUsageDest')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Destinos gestores</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="usageDest" checked> Vista</label></div><div class="card-body"><div class="spark" id="chartUsageDest"></div><div class="mini-summary" id="summaryUsageDest"></div></div></div>
         </div>
       </div>
       <div class="insight-view" id="view-pid-types">
         <div class="hero"><h1>Información sobre tipologías de datos</h1></div>
         <div class="insights">
-          <div class="card" id="cardTypesTurIncrease">
+          <div class="card collapsed" id="cardTypesTurIncrease">
             <div class="card-header" onclick="toggleCard('cardTypesTurIncrease')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Incremento turístico por CCAA</h3></div></div>
             <div class="card-body"><div class="spark" id="chartTurIncrease"></div><div class="mini-summary" id="summaryTurIncrease"></div></div>
           </div>
-          <div class="card" id="cardTypesTur"><div class="card-header" onclick="toggleCard('cardTypesTur')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Datos turísticos</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="typesTur" checked> Vista</label></div><div class="card-body"><div class="spark" id="chartTypesTur"></div><div class="mini-summary" id="summaryTypesTur"></div></div></div>
-          <div class="card" id="cardTypesNon"><div class="card-header" onclick="toggleCard('cardTypesNon')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Datos no ontológicos</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="typesNon" checked> Vista</label></div><div class="card-body"><div class="spark" id="chartTypesNon"></div><div class="mini-summary" id="summaryTypesNon"></div></div></div>
+          <div class="card collapsed" id="cardTypesTur"><div class="card-header" onclick="toggleCard('cardTypesTur')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Datos turísticos</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="typesTur" checked> Vista</label></div><div class="card-body"><div class="spark" id="chartTypesTur"></div><div class="mini-summary" id="summaryTypesTur"></div></div></div>
+          <div class="card collapsed" id="cardTypesNon"><div class="card-header" onclick="toggleCard('cardTypesNon')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Datos no ontológicos</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="typesNon" checked> Vista</label></div><div class="card-body"><div class="spark" id="chartTypesNon"></div><div class="mini-summary" id="summaryTypesNon"></div></div></div>
         </div>
       </div>
     </div>
