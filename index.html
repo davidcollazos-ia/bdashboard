@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -33,10 +33,18 @@
       radial-gradient(circle at top right, rgba(143,58,127,.10), transparent 30%),
       linear-gradient(180deg,#fbf8f1 0%,var(--bg) 100%);
       color:var(--ink);overflow:hidden}
-    #map{position:fixed;left:390px;right:390px;top:0;bottom:0;z-index:1}
+    #map{position:fixed;left:390px;right:92px;top:0;bottom:0;z-index:1}
     .panel{position:absolute;top:16px;z-index:1000;width:360px;background:var(--panel-strong);border-radius:var(--radius-lg);box-shadow:var(--shadow);overflow:hidden;border:1px solid var(--line);backdrop-filter:blur(12px)}
     .sidebar{left:16px;max-height:calc(100vh - 32px);display:flex;flex-direction:column}
-    .insightbar{right:16px;height:calc(100vh - 32px);display:flex;flex-direction:column;overflow-y:auto !important;overflow-x:hidden;overscroll-behavior:contain;scrollbar-gutter:stable}
+    .insightbar{right:16px;width:64px;height:calc(100vh - 32px);display:flex;align-items:stretch;overflow:visible;background:transparent;border:none;box-shadow:none}
+    .insight-rail{width:64px;display:flex;flex-direction:column;gap:8px;align-items:stretch;padding:8px;border:1px solid var(--line);border-radius:22px;background:rgba(255,251,255,.95);box-shadow:var(--shadow);backdrop-filter:blur(12px)}
+    .insight-btn{border:1px solid transparent;background:linear-gradient(180deg,#fffdfd,#f7eef6);border-radius:16px;padding:10px 8px;min-height:78px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;color:var(--ink);font:inherit;font-size:10px;font-weight:800;line-height:1.15;text-align:center;transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease, background .15s ease}
+    .insight-btn .ico{font-size:18px;line-height:1}
+    .insight-btn:hover{transform:translateX(-2px);box-shadow:0 10px 18px rgba(31,41,55,.08);border-color:#e9d8e7}
+    .insight-btn.active{background:linear-gradient(180deg,rgba(193,61,131,.12),rgba(143,58,127,.08));border-color:rgba(193,61,131,.22);color:var(--brand)}
+    .insight-panel{position:absolute;right:74px;top:0;width:360px;height:calc(100vh - 32px);display:flex;flex-direction:column;overflow-y:auto !important;overflow-x:hidden;overscroll-behavior:contain;scrollbar-gutter:stable;background:var(--panel-strong);border-radius:var(--radius-lg);box-shadow:var(--shadow);border:1px solid var(--line);backdrop-filter:blur(12px)}
+    .insight-view{display:none;flex-direction:column;min-height:100%}
+    .insight-view.active{display:flex}
     .hero{padding:18px;background:
       linear-gradient(135deg, #5f2b7a 0%, #8f3a7f 45%, #c13d83 100%);
       color:#fff;position:relative;overflow:hidden}
@@ -84,8 +92,8 @@
     .card-header h3{margin:0;font-size:13px;color:var(--ink);font-weight:800;letter-spacing:.01em}
     .card-title-wrap{display:flex;align-items:center;gap:8px;min-width:0;flex:1}
     .card-toggle{font-size:0;color:transparent;line-height:1;display:flex;align-items:center;justify-content:center;width:18px;height:18px;flex:0 0 auto}
-    .card-toggle::before{content:'⌄';font-size:18px;line-height:1;color:var(--muted);transform:translateY(-1px);transition:transform .15s ease, color .15s ease}
-    .card:not(.collapsed) .card-toggle::before{content:'⌃';transform:translateY(1px)}
+    .card-toggle::before{content:'âŒ„';font-size:18px;line-height:1;color:var(--muted);transform:translateY(-1px);transition:transform .15s ease, color .15s ease}
+    .card:not(.collapsed) .card-toggle::before{content:'âŒƒ';transform:translateY(1px)}
     .card-header:hover .card-toggle::before{color:var(--brand)}
     .card-body{padding:12px;overflow:visible}
     .card.collapsed .card-body{display:none}
@@ -141,13 +149,13 @@
   <div class="panel sidebar">
     <div class="hero">
       <h1>PID Dashboard</h1>
-      <p>Polígonos municipales y puntos clusterizados en una sola vista.</p>
+      <p>PolÃ­gonos municipales y puntos clusterizados en una sola vista.</p>
     </div>
     <div class="filters">
       <div class="block capas">
         <h2>Capas del mapa</h2>
         <div class="content">
-          <div class="note">Activa, reordena y ajusta la transparencia de cada capa. Las leyendas están plegadas por defecto.</div>
+          <div class="note">Activa, reordena y ajusta la transparencia de cada capa. Las leyendas estÃ¡n plegadas por defecto.</div>
           <div class="actions" style="margin-top:10px">
             <button type="button" id="showAllLayers">Mostrar todas</button>
             <button type="button" id="hideAllLayers">Ocultar todas</button>
@@ -177,47 +185,62 @@
       </div>
     </div>
 
-  <div class="panel insightbar">
-    <div class="hero">
-      <h1>Panel de gráficos</h1>
-      <p>Se recalcula con lo que queda dentro del encuadre actual.</p>
+    <div class="panel insightbar">
+    <div class="insight-rail">
+      <button type="button" class="insight-btn active" data-view="pid-data" onclick="window.pidSwitchInsightView('pid-data')" title="Datos que contiene la PID">
+        <span class="ico">◫</span>
+        <span>PID</span>
+      </button>
+      <button type="button" class="insight-btn" data-view="pid-usage" onclick="window.pidSwitchInsightView('pid-usage')" title="Información del uso de la PID">
+        <span class="ico">▣</span>
+        <span>Uso</span>
+      </button>
+      <button type="button" class="insight-btn" data-view="pid-types" onclick="window.pidSwitchInsightView('pid-types')" title="Información sobre tipologías de datos">
+        <span class="ico">◉</span>
+        <span>Datos</span>
+      </button>
     </div>
-    <div class="insights">
-      <div class="card collapsed" id="cardDiag">
-        <div class="card-header" onclick="toggleCard('cardDiag')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Total y capa</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="diag" checked> Vista</label></div>
-        <div class="card-body">
-          <div class="donut-wrap">
-            <div class="donut" id="chartMaturity"><div class="donut-center" id="maturityCenter">0</div></div>
-            <div class="donut-legend" id="summaryMaturity"></div>
+    <div class="insight-panel">
+      <div class="insight-view active" id="view-pid-data">
+        <div class="hero"><h1>Datos que contiene la PID</h1></div>
+        <div class="insights">
+          <div class="card collapsed" id="cardDiag">
+            <div class="card-header" onclick="toggleCard('cardDiag')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Total y capa</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="diag" checked> Vista</label></div>
+            <div class="card-body"><div class="donut-wrap"><div class="donut" id="chartMaturity"><div class="donut-center" id="maturityCenter">0</div></div><div class="donut-legend" id="summaryMaturity"></div></div></div>
+          </div>
+          <div class="card collapsed" id="cardTypes">
+            <div class="card-header" onclick="toggleCard('cardTypes')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Categorías</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="types" checked> Vista</label></div>
+            <div class="card-body"><div class="spark" id="chartTypes"></div><div class="mini-summary" id="summaryTypes"></div></div>
+          </div>
+          <div class="card collapsed" id="cardPois">
+            <div class="card-header" onclick="toggleCard('cardPois')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>POIs por categoría</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="pois" checked> Vista</label></div>
+            <div class="card-body"><div class="spark" id="chartPois"></div><div class="mini-summary" id="summaryPois"></div></div>
+          </div>
+          <div class="card collapsed" id="cardCountries">
+            <div class="card-header" onclick="toggleCard('cardCountries')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Municipios top</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="countries" checked> Vista</label></div>
+            <div class="card-body"><div class="spark" id="chartCountries"></div><div class="mini-summary" id="summaryCountries"></div><div id="provinceChips" style="margin-top:8px"></div></div>
+          </div>
+          <div class="card collapsed" id="cardDiagnosis2">
+            <div class="card-header" onclick="toggleCard('cardDiagnosis2')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Diversidad</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="diagnosis2" checked> Vista</label></div>
+            <div class="card-body"><div class="spark" id="chartDiagnosis2"></div><div class="mini-summary" id="summaryDiagnosis2"></div></div>
           </div>
         </div>
+        <div class="bottom-strip"><h4>Indicadores</h4><div class="bottom-grid"><div class="bottom-stat"><div class="n" id="extraVisiblePct">0%</div><div class="l">cobertura visible</div></div><div class="bottom-stat"><div class="n" id="extraCountries">0</div><div class="l">municipios visibles</div></div><div class="bottom-stat"><div class="n" id="extraProvinces">0</div><div class="l">provincias visibles</div></div></div></div>
       </div>
-      <div class="card collapsed" id="cardTypes">
-        <div class="card-header" onclick="toggleCard('cardTypes')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Categorías</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="types" checked> Vista</label></div>
-        <div class="card-body">
-          <div class="spark" id="chartTypes"></div>
-          <div class="mini-summary" id="summaryTypes"></div>
+      <div class="insight-view" id="view-pid-usage">
+        <div class="hero"><h1>Información del uso de la PID</h1></div>
+        <div class="insights">
+          <div class="card" id="cardUsageUsers"><div class="card-header" onclick="toggleCard('cardUsageUsers')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Usuarios por municipio</h3></div></div><div class="card-body"><div class="spark" id="chartUsageUsers"></div><div class="mini-summary" id="summaryUsageUsers"></div></div></div>
+          <div class="card" id="cardUsageModules"><div class="card-header" onclick="toggleCard('cardUsageModules')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Módulos comunes</h3></div></div><div class="card-body"><div class="spark" id="chartUsageModules"></div><div class="mini-summary" id="summaryUsageModules"></div></div></div>
+          <div class="card" id="cardUsageDest"><div class="card-header" onclick="toggleCard('cardUsageDest')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Destinos gestores</h3></div></div><div class="card-body"><div class="spark" id="chartUsageDest"></div><div class="mini-summary" id="summaryUsageDest"></div></div></div>
         </div>
       </div>
-      <div class="card collapsed" id="cardPois">
-        <div class="card-header" onclick="toggleCard('cardPois')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>POIs por categoría</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="pois" checked> Vista</label></div>
-        <div class="card-body"><div class="spark" id="chartPois"></div><div class="mini-summary" id="summaryPois"></div></div>
-      </div>
-      <div class="card collapsed" id="cardCountries">
-        <div class="card-header" onclick="toggleCard('cardCountries')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Municipios top</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="countries" checked> Vista</label></div>
-        <div class="card-body"><div class="spark" id="chartCountries"></div><div class="mini-summary" id="summaryCountries"></div><div id="provinceChips" style="margin-top:8px"></div></div>
-      </div>
-      <div class="card collapsed" id="cardDiagnosis2">
-        <div class="card-header" onclick="toggleCard('cardDiagnosis2')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Diversidad</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="diagnosis2" checked> Vista</label></div>
-        <div class="card-body"><div class="spark" id="chartDiagnosis2"></div><div class="mini-summary" id="summaryDiagnosis2"></div></div>
-      </div>
-    </div>
-    <div class="bottom-strip">
-      <h4>Indicadores</h4>
-      <div class="bottom-grid">
-        <div class="bottom-stat"><div class="n" id="extraVisiblePct">0%</div><div class="l">cobertura visible</div></div>
-        <div class="bottom-stat"><div class="n" id="extraCountries">0</div><div class="l">municipios visibles</div></div>
-        <div class="bottom-stat"><div class="n" id="extraProvinces">0</div><div class="l">provincias visibles</div></div>
+      <div class="insight-view" id="view-pid-types">
+        <div class="hero"><h1>Información sobre tipologías de datos</h1></div>
+        <div class="insights">
+          <div class="card" id="cardTypesTur"><div class="card-header" onclick="toggleCard('cardTypesTur')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Datos turísticos</h3></div></div><div class="card-body"><div class="spark" id="chartTypesTur"></div><div class="mini-summary" id="summaryTypesTur"></div></div></div>
+          <div class="card" id="cardTypesNon"><div class="card-header" onclick="toggleCard('cardTypesNon')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Datos no ontológicos</h3></div></div><div class="card-body"><div class="spark" id="chartTypesNon"></div><div class="mini-summary" id="summaryTypesNon"></div></div></div>
+        </div>
       </div>
     </div>
   </div>
@@ -277,9 +300,9 @@
     function metricPalette(name){
       const palette = {
         'Uso de la PID':['#fff2f8','#fbc6e5','#f68ac8','#ec4da2','#d81b74','#a9155b'],
-        'Módulos Comunes':['#fff7e8','#fde6b0','#fdcb70','#faa43c','#f07a1e','#c9550d'],
-        'Datos Turísticos':['#effcf7','#caf7e4','#8feccd','#45d9ad','#16b88f','#0d8a6e'],
-        'Datos No ontológicos':['#f3f0ff','#ddd6ff','#bda9ff','#946efb','#6d41e9','#4f2cc0'],
+        'MÃ³dulos Comunes':['#fff7e8','#fde6b0','#fdcb70','#faa43c','#f07a1e','#c9550d'],
+        'Datos TurÃ­sticos':['#effcf7','#caf7e4','#8feccd','#45d9ad','#16b88f','#0d8a6e'],
+        'Datos No ontolÃ³gicos':['#f3f0ff','#ddd6ff','#bda9ff','#946efb','#6d41e9','#4f2cc0'],
         'Destinos Gestores':['#fff1e8','#ffd3b5','#ffb06f','#ff8144','#ec591d','#ba4310']
       };
       return palette[name] || ['#f7e6f2','#f2d3ea','#ebb8dd','#de91c7','#c96aad','#b14a91'];
@@ -306,10 +329,10 @@
 
     function metricLabel(name){
       return {
-        'Uso de la PID':'Número de usuarios',
-        'Módulos Comunes':'Soluciones digitales activas',
-        'Datos Turísticos':'Incremento de tripletas',
-        'Datos No ontológicos':'Número de registros',
+        'Uso de la PID':'NÃºmero de usuarios',
+        'MÃ³dulos Comunes':'Soluciones digitales activas',
+        'Datos TurÃ­sticos':'Incremento de tripletas',
+        'Datos No ontolÃ³gicos':'NÃºmero de registros',
         'Destinos Gestores':'Destinos gestionados'
       }[name] || 'Valor';
     }
@@ -317,15 +340,15 @@
     function metricValue(def, props){
       const p = props || {};
       const n = v => parseNum(v);
-      if (def.id === 'uso') return n(p['Número de Usuarios']) ?? 0;
+      if (def.id === 'uso') return n(p['NÃºmero de Usuarios']) ?? 0;
       if (def.id === 'mods') return n(p['N Usuarios con Acceso']) ?? 0;
       if (def.id === 'tur') {
         const last = n(p['TRIPLETAS_GRAFO 30/07/2026']) ?? 0;
         const prev = n(p['TRIPLETAS_GRAFO 09/07/2026']) ?? 0;
         return last - prev;
       }
-      if (def.id === 'non') return n(p['Número de registros']) ?? 0;
-      if (def.id === 'gest') return n(p['Número de destinos gestionados']) ?? n(p['N destinos gestionados']) ?? n(p['Número de destinos']) ?? 0;
+      if (def.id === 'non') return n(p['NÃºmero de registros']) ?? 0;
+      if (def.id === 'gest') return n(p['NÃºmero de destinos gestionados']) ?? n(p['N destinos gestionados']) ?? n(p['NÃºmero de destinos']) ?? 0;
       return n(p.total_puntos) ?? 0;
     }
 
@@ -379,7 +402,7 @@
           visible:true,
           pane:'pane-pts',
           legend:[
-            { label:'1-4 puntos', color:clusterColor(1), note:'Cluster pequeño' },
+            { label:'1-4 puntos', color:clusterColor(1), note:'Cluster pequeÃ±o' },
             { label:'5-9 puntos', color:clusterColor(5), note:'Cluster bajo' },
             { label:'10-24 puntos', color:clusterColor(10), note:'Cluster medio' },
             { label:'25-49 puntos', color:clusterColor(25), note:'Cluster alto' },
@@ -390,7 +413,7 @@
         {
           id:'uso',
           label:'Uso de la PID',
-          subtitle:'Polígonos por hoja',
+          subtitle:'PolÃ­gonos por hoja',
           kind:'sheet',
           url:'./_cdmdti/geojson_por_hoja/uso_de_la_pid.geojson',
           visible:false,
@@ -406,59 +429,59 @@
         },
         {
           id:'mods',
-          label:'Módulos Comunes',
-          subtitle:'Polígonos por hoja',
+          label:'MÃ³dulos Comunes',
+          subtitle:'PolÃ­gonos por hoja',
           kind:'sheet',
           url:'./_cdmdti/geojson_por_hoja/modulos_comunes.geojson',
           visible:false,
           pane:'pane-mods',
           legend:[
             { label:'0', color:'#edf2f7', note:'Sin soluciones' },
-            { label:'1-2', color:metricPalette('Módulos Comunes')[0], note:'Muy bajo' },
-            { label:'3-5', color:metricPalette('Módulos Comunes')[1], note:'Bajo' },
-            { label:'6-10', color:metricPalette('Módulos Comunes')[2], note:'Medio' },
-            { label:'11-25', color:metricPalette('Módulos Comunes')[3], note:'Alto' },
-            { label:'26+', color:metricPalette('Módulos Comunes')[5], note:'Muy alto' }
+            { label:'1-2', color:metricPalette('MÃ³dulos Comunes')[0], note:'Muy bajo' },
+            { label:'3-5', color:metricPalette('MÃ³dulos Comunes')[1], note:'Bajo' },
+            { label:'6-10', color:metricPalette('MÃ³dulos Comunes')[2], note:'Medio' },
+            { label:'11-25', color:metricPalette('MÃ³dulos Comunes')[3], note:'Alto' },
+            { label:'26+', color:metricPalette('MÃ³dulos Comunes')[5], note:'Muy alto' }
           ]
         },
         {
           id:'tur',
-          label:'Datos Turísticos',
-          subtitle:'Polígonos por hoja',
+          label:'Datos TurÃ­sticos',
+          subtitle:'PolÃ­gonos por hoja',
           kind:'sheet',
           url:'./_cdmdti/geojson_por_hoja/datos_turisticos.geojson',
           visible:false,
           pane:'pane-tur',
           legend:[
-            { label:'Caída', color:'#f97316', note:'Baja respecto a 09/07' },
-            { label:'Sin cambio', color:'#eab308', note:'0 variación' },
-            { label:'Subida baja', color:metricPalette('Datos Turísticos')[2], note:'+1 a +10' },
-            { label:'Subida media', color:metricPalette('Datos Turísticos')[3], note:'+11 a +50' },
-            { label:'Subida alta', color:metricPalette('Datos Turísticos')[4], note:'+51 a +100' },
-            { label:'Subida muy alta', color:metricPalette('Datos Turísticos')[5], note:'+100+' }
+            { label:'CaÃ­da', color:'#f97316', note:'Baja respecto a 09/07' },
+            { label:'Sin cambio', color:'#eab308', note:'0 variaciÃ³n' },
+            { label:'Subida baja', color:metricPalette('Datos TurÃ­sticos')[2], note:'+1 a +10' },
+            { label:'Subida media', color:metricPalette('Datos TurÃ­sticos')[3], note:'+11 a +50' },
+            { label:'Subida alta', color:metricPalette('Datos TurÃ­sticos')[4], note:'+51 a +100' },
+            { label:'Subida muy alta', color:metricPalette('Datos TurÃ­sticos')[5], note:'+100+' }
           ]
         },
         {
           id:'non',
-          label:'Datos No ontológicos',
-          subtitle:'Polígonos por hoja',
+          label:'Datos No ontolÃ³gicos',
+          subtitle:'PolÃ­gonos por hoja',
           kind:'sheet',
           url:'./_cdmdti/geojson_por_hoja/datos_no_ontologicos.geojson',
           visible:false,
           pane:'pane-non',
           legend:[
             { label:'0', color:'#edf2f7', note:'Sin registros' },
-            { label:'1-2', color:metricPalette('Datos No ontológicos')[0], note:'Muy bajo' },
-            { label:'3-5', color:metricPalette('Datos No ontológicos')[1], note:'Bajo' },
-            { label:'6-10', color:metricPalette('Datos No ontológicos')[2], note:'Medio' },
-            { label:'11-25', color:metricPalette('Datos No ontológicos')[3], note:'Alto' },
-            { label:'26+', color:metricPalette('Datos No ontológicos')[5], note:'Muy alto' }
+            { label:'1-2', color:metricPalette('Datos No ontolÃ³gicos')[0], note:'Muy bajo' },
+            { label:'3-5', color:metricPalette('Datos No ontolÃ³gicos')[1], note:'Bajo' },
+            { label:'6-10', color:metricPalette('Datos No ontolÃ³gicos')[2], note:'Medio' },
+            { label:'11-25', color:metricPalette('Datos No ontolÃ³gicos')[3], note:'Alto' },
+            { label:'26+', color:metricPalette('Datos No ontolÃ³gicos')[5], note:'Muy alto' }
           ]
         },
         {
           id:'gest',
           label:'Destinos Gestores',
-          subtitle:'Polígonos por hoja',
+          subtitle:'PolÃ­gonos por hoja',
           kind:'sheet',
           url:'./_cdmdti/geojson_por_hoja/destinos_gestores.geojson',
           visible:false,
@@ -502,7 +525,7 @@
         card.dataset.layerId = def.id;
         card.innerHTML = `
           <div class="layer-head">
-            <span class="layer-grip" title="Arrastrar">⋮⋮</span>
+            <span class="layer-grip" title="Arrastrar">â‹®â‹®</span>
             <div class="layer-meta">
               <div class="layer-name">${esc(def.label)}</div>
               <label class="layer-toggle" title="Mostrar u ocultar">
@@ -510,7 +533,7 @@
                 Visible
               </label>
             </div>
-            <button type="button" class="legend-btn" data-action="legend" title="Mostrar u ocultar leyenda">⌄</button>
+            <button type="button" class="legend-btn" data-action="legend" title="Mostrar u ocultar leyenda">âŒ„</button>
           </div>
           <div class="layer-body">
             <div class="layer-legend">
@@ -833,9 +856,27 @@
       if (!entries.length) el.innerHTML = '<div style="font-size:12px;color:#64748b">Sin datos</div>';
     }
 
+    function topMetricEntries(data, valueFn, labelFn = row => row.name || row.municipio || row.title || 'Sin nombre'){
+      return (data || [])
+        .map(row => [labelFn(row), Number(valueFn(row) || 0)])
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 6);
+    }
+
+    function setSummaryChips(targetId, entries, emptyText = 'Sin datos'){
+      const el = document.getElementById(targetId);
+      if (!el) return;
+      el.innerHTML = entries.length ? entries.map(([k, v]) => `<span class="chip">${esc(k)}: ${v}</span>`).join('') : emptyText;
+    }
+
     function chartScope(chartId){
       const cb = document.querySelector(`.chart-scope[data-chart="${chartId}"]`);
       return cb ? cb.checked : true;
+    }
+
+    function switchInsightView(viewId){
+      document.querySelectorAll('.insight-view').forEach(view => view.classList.toggle('active', view.id === `view-${viewId}`));
+      document.querySelectorAll('.insight-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.view === viewId));
     }
 
     function renderInsights(visiblePoints){
@@ -872,6 +913,27 @@
       document.getElementById('extraVisiblePct').textContent = `${Math.round((visiblePoints.length / state.points.length) * 100)}%`;
       document.getElementById('extraCountries').textContent = uniqueSorted(visiblePoints.map(d => d.municipio)).length;
       document.getElementById('extraProvinces').textContent = uniqueSorted(visiblePoints.map(d => d.provincia)).length;
+
+      const usoDef = layerState.items.find(d => d.id === 'uso');
+      const modsDef = layerState.items.find(d => d.id === 'mods');
+      const turDef = layerState.items.find(d => d.id === 'tur');
+      const nonDef = layerState.items.find(d => d.id === 'non');
+      const gestDef = layerState.items.find(d => d.id === 'gest');
+      const usageUsers = topMetricEntries(usoDef?.data?.features || [], f => metricValue(usoDef, f.properties || {}), f => f.properties?.n_mun || f.properties?.name || 'Sin nombre');
+      const usageModules = topMetricEntries(modsDef?.data?.features || [], f => metricValue(modsDef, f.properties || {}), f => f.properties?.n_mun || f.properties?.name || 'Sin nombre');
+      const usageDest = topMetricEntries(gestDef?.data?.features || [], f => metricValue(gestDef, f.properties || {}), f => f.properties?.n_mun || f.properties?.name || 'Sin nombre');
+      const turEntries = topMetricEntries(turDef?.data?.features || [], f => metricValue(turDef, f.properties || {}), f => f.properties?.n_mun || f.properties?.name || 'Sin nombre');
+      const nonEntries = topMetricEntries(nonDef?.data?.features || [], f => metricValue(nonDef, f.properties || {}), f => f.properties?.n_mun || f.properties?.name || 'Sin nombre');
+      bars('chartUsageUsers', usageUsers, chartPalette);
+      bars('chartUsageModules', usageModules, chartPalette.slice().reverse());
+      bars('chartUsageDest', usageDest, [chartPalette[1], chartPalette[2], chartPalette[3], chartPalette[4], chartPalette[5], chartPalette[0]]);
+      bars('chartTypesTur', turEntries, [chartPalette[3], chartPalette[2], chartPalette[1], chartPalette[0], chartPalette[4], chartPalette[5]]);
+      bars('chartTypesNon', nonEntries, [chartPalette[5], chartPalette[4], chartPalette[3], chartPalette[2], chartPalette[1], chartPalette[0]]);
+      setSummaryChips('summaryUsageUsers', usageUsers.slice(0, 3));
+      setSummaryChips('summaryUsageModules', usageModules.slice(0, 3));
+      setSummaryChips('summaryUsageDest', usageDest.slice(0, 3));
+      setSummaryChips('summaryTypesTur', turEntries.slice(0, 3));
+      setSummaryChips('summaryTypesNon', nonEntries.slice(0, 3));
     }
 
     function renderDashboard(){
@@ -942,6 +1004,11 @@
         loadGeoJson(defs[5].url),
         loadGeoJson(defs[6].url)
       ]);
+      defs[2].data = usoData;
+      defs[3].data = modsData;
+      defs[4].data = turData;
+      defs[5].data = nonData;
+      defs[6].data = gestData;
       state.municipios = Array.isArray(munData.features) ? munData.features : [];
       state.municipios.forEach(feature => {
         const p = feature.properties || {};
@@ -1010,6 +1077,8 @@
       renderInsights((map.getBounds().isValid() ? visible.filter(inBounds) : visible));
     }));
     window.pidSwitchIdentifyTab = (btn, targetId) => switchIdentifyTab(btn.closest('.popup'), targetId);
+    window.pidSwitchInsightView = switchInsightView;
   </script>
 </body>
 </html>
+
