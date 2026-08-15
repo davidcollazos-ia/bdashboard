@@ -104,11 +104,11 @@
     .donut{width:96px;height:96px;border-radius:50%;position:relative;flex:0 0 auto;background:conic-gradient(#e7c9df 0 100%)}
     .donut::after{content:'';position:absolute;inset:20px;background:#fffdf9;border-radius:50%;box-shadow:inset 0 0 0 1px var(--line)}
     .donut-center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:1;font-size:16px;font-weight:800;color:var(--brand-2)}
-    .donut-legend{font-size:11px;color:#334155;line-height:1.45;display:flex;flex-direction:column;gap:4px;overflow:visible;min-width:150px;padding-right:4px}
-    .legend-item{display:flex;align-items:center;gap:6px;justify-content:space-between;padding:4px 6px;border:1px solid #ebd9e5;border-radius:10px;background:#fffdfd}
+    .donut-legend{font-size:10px;color:#334155;line-height:1.35;display:flex;flex-direction:column;gap:4px;overflow:visible;min-width:150px;padding-right:4px}
+    .legend-item{display:flex;align-items:center;gap:6px;justify-content:space-between;padding:3px 5px;border:1px solid #ebd9e5;border-radius:10px;background:#fffdfd}
     .legend-left{display:flex;align-items:center;gap:6px;min-width:0}
-    .legend-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .legend-value{font-weight:800;color:var(--ink)}
+    .legend-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px}
+    .legend-value{font-weight:800;color:var(--ink);font-size:9px}
     .legend-swatch{width:10px;height:10px;border-radius:999px;display:inline-block;flex:0 0 auto}
     .bottom-strip{padding:12px 14px 16px;border-top:1px solid var(--line);background:linear-gradient(180deg,#fffdfd,#f7eef6)}
     .bottom-strip h4{margin:0 0 8px;font-size:12px;color:var(--ink);font-weight:800;letter-spacing:.02em}
@@ -120,7 +120,7 @@
     .popup h3{margin:0 0 8px;font-size:15px;color:var(--brand-2)}
     .meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px;color:#334155}
     .meta div{background:#fffdfd;border:1px solid var(--line);border-radius:10px;padding:8px}
-    .meta b{display:block;font-size:10px;color:var(--muted);margin-bottom:2px;text-transform:uppercase;letter-spacing:.04em}
+    .meta b{display:block;font-size:9px;color:var(--muted);margin-bottom:2px;text-transform:uppercase;letter-spacing:.04em}
     .note{font-size:11px;color:var(--muted);line-height:1.4}
     .identify-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 8px}
     .identify-tab{border:1px solid #eadfeb;background:#fffdfd;color:#5f2b7a;border-radius:999px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer}
@@ -128,7 +128,7 @@
     .identify-panel{display:none}
     .identify-panel.active{display:block}
     .identify-summary{border:1px solid #eadfeb;border-radius:12px;padding:10px;background:#fffdfd}
-    .identify-label{display:inline-block;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:6px}
+    .identify-label{display:inline-block;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:6px}
     @media (max-width:1100px){.panel{width:320px}#map{left:340px;right:340px}.bottom-grid{grid-template-columns:1fr}}
     @media (max-width:900px){html,body{overflow:auto}#map{position:relative;left:0;right:0;height:52vh}.panel{position:relative;left:auto;right:auto;top:auto;width:auto;max-height:none;margin:12px 12px 0}}
   </style>
@@ -270,27 +270,81 @@
       return '#de91c7';
     }
 
-    function polygonFill(total){
-      if (!total || total <= 0) {
-        return { fillColor:'#cbd5e1', fillOpacity:0.06, opacity:0.22, color:'#94a3b8' };
+    function metricPalette(name){
+      const palette = {
+        'Uso de la PID':['#fff2f8','#fbc6e5','#f68ac8','#ec4da2','#d81b74','#a9155b'],
+        'Módulos Comunes':['#fff7e8','#fde6b0','#fdcb70','#faa43c','#f07a1e','#c9550d'],
+        'Datos Turísticos':['#effcf7','#caf7e4','#8feccd','#45d9ad','#16b88f','#0d8a6e'],
+        'Datos No ontológicos':['#f3f0ff','#ddd6ff','#bda9ff','#946efb','#6d41e9','#4f2cc0'],
+        'Destinos Gestores':['#fff1e8','#ffd3b5','#ffb06f','#ff8144','#ec591d','#ba4310']
+      };
+      return palette[name] || ['#f7e6f2','#f2d3ea','#ebb8dd','#de91c7','#c96aad','#b14a91'];
+    }
+
+    function parseNum(v){
+      if (v === null || v === undefined || v === '') return null;
+      if (typeof v === 'number' && Number.isFinite(v)) return v;
+      const text = String(v).trim().replace(/\s+/g, '');
+      const normalized = text.includes(',') && text.includes('.')
+        ? text.replace(/\./g, '').replace(',', '.')
+        : text.replace(',', '.');
+      const n = Number(normalized);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function bucketize(value, thresholds){
+      if (!Number.isFinite(value)) return -1;
+      for (let i = thresholds.length - 1; i >= 0; i--) {
+        if (value >= thresholds[i]) return i;
       }
-      const idx = clamp(Math.floor(Math.log10(total + 1) * 2), 0, colorRamp.length - 1);
-      return { fillColor: colorRamp[idx], fillOpacity: 0.6, opacity: 0.8, color: '#9a3412' };
+      return 0;
+    }
+
+    function metricLabel(name){
+      return {
+        'Uso de la PID':'Número de usuarios',
+        'Módulos Comunes':'Soluciones digitales activas',
+        'Datos Turísticos':'Incremento de tripletas',
+        'Datos No ontológicos':'Número de registros',
+        'Destinos Gestores':'Destinos gestionados'
+      }[name] || 'Valor';
+    }
+
+    function metricValue(def, props){
+      const p = props || {};
+      const n = v => parseNum(v);
+      if (def.id === 'uso') return n(p['Número de Usuarios']) ?? 0;
+      if (def.id === 'mods') return n(p['N Usuarios con Acceso']) ?? 0;
+      if (def.id === 'tur') {
+        const last = n(p['TRIPLETAS_GRAFO 30/07/2026']) ?? 0;
+        const prev = n(p['TRIPLETAS_GRAFO 09/07/2026']) ?? 0;
+        return last - prev;
+      }
+      if (def.id === 'non') return n(p['Número de registros']) ?? 0;
+      if (def.id === 'gest') return n(p['Número de destinos gestionados']) ?? n(p['N destinos gestionados']) ?? n(p['Número de destinos']) ?? 0;
+      return n(p.total_puntos) ?? 0;
+    }
+
+    function metricStyle(def, props){
+      const palette = metricPalette(def.label);
+      const value = metricValue(def, props);
+      if (def.id === 'tur') {
+        if (value < 0) return { fillColor:'#fb7185', fillOpacity:0.8, opacity:0.92, color:'#e11d48', weight:1 };
+        if (value === 0) return { fillColor:'#fde047', fillOpacity:0.78, opacity:0.92, color:'#ca8a04', weight:1 };
+        const absBucket = bucketize(Math.abs(value), [0, 1, 5, 10, 25, 50]);
+        const idx = clamp(absBucket, 0, palette.length - 1);
+        return { fillColor: palette[idx], fillOpacity:0.78, opacity:0.92, color: palette[Math.max(0, idx - 1)], weight:1 };
+      }
+      const bucket = bucketize(value, [0, 1, 5, 10, 25, 50]);
+      if (bucket === 0) {
+        return { fillColor:'#edf2f7', fillOpacity:0.12, opacity:0.22, color:'#94a3b8', weight:1 };
+      }
+      const idx = clamp(bucket - 1, 0, palette.length - 1);
+      return { fillColor: palette[idx], fillOpacity:0.78, opacity:0.92, color: palette[Math.max(0, idx - 1)], weight:1 };
     }
 
     function renderLayerLegend(){
       return true;
-    }
-
-    function sheetColor(name){
-      const palette = {
-        'Uso de la PID':'#8f3a7f',
-        'Módulos Comunes':'#c13d83',
-        'Datos Turísticos':'#b14a91',
-        'Datos No ontológicos':'#6d2f69',
-        'Destinos Gestores':'#f59e0b'
-      };
-      return palette[name] || '#8f3a7f';
     }
 
     function getLayerDefs(){
@@ -337,7 +391,14 @@
           url:'./_cdmdti/geojson_por_hoja/uso_de_la_pid.geojson',
           visible:false,
           pane:'pane-uso',
-          legend:[{ label:'Destinos', color:sheetColor('Uso de la PID'), note:'Usuarios / estado' }]
+          legend:[
+            { label:'0', color:'#edf2f7', note:'Sin usuarios' },
+            { label:'1-2', color:metricPalette('Uso de la PID')[0], note:'Muy bajo' },
+            { label:'3-5', color:metricPalette('Uso de la PID')[1], note:'Bajo' },
+            { label:'6-10', color:metricPalette('Uso de la PID')[2], note:'Medio' },
+            { label:'11-25', color:metricPalette('Uso de la PID')[3], note:'Alto' },
+            { label:'26+', color:metricPalette('Uso de la PID')[5], note:'Muy alto' }
+          ]
         },
         {
           id:'mods',
@@ -347,7 +408,14 @@
           url:'./_cdmdti/geojson_por_hoja/modulos_comunes.geojson',
           visible:false,
           pane:'pane-mods',
-          legend:[{ label:'Destinos', color:sheetColor('Módulos Comunes'), note:'Soluciones digitales' }]
+          legend:[
+            { label:'0', color:'#edf2f7', note:'Sin soluciones' },
+            { label:'1-2', color:metricPalette('Módulos Comunes')[0], note:'Muy bajo' },
+            { label:'3-5', color:metricPalette('Módulos Comunes')[1], note:'Bajo' },
+            { label:'6-10', color:metricPalette('Módulos Comunes')[2], note:'Medio' },
+            { label:'11-25', color:metricPalette('Módulos Comunes')[3], note:'Alto' },
+            { label:'26+', color:metricPalette('Módulos Comunes')[5], note:'Muy alto' }
+          ]
         },
         {
           id:'tur',
@@ -357,7 +425,14 @@
           url:'./_cdmdti/geojson_por_hoja/datos_turisticos.geojson',
           visible:false,
           pane:'pane-tur',
-          legend:[{ label:'Destinos', color:sheetColor('Datos Turísticos'), note:'Tripletas / grafo' }]
+          legend:[
+            { label:'Caída', color:'#f97316', note:'Baja respecto a 09/07' },
+            { label:'Sin cambio', color:'#eab308', note:'0 variación' },
+            { label:'Subida baja', color:metricPalette('Datos Turísticos')[2], note:'+1 a +10' },
+            { label:'Subida media', color:metricPalette('Datos Turísticos')[3], note:'+11 a +50' },
+            { label:'Subida alta', color:metricPalette('Datos Turísticos')[4], note:'+51 a +100' },
+            { label:'Subida muy alta', color:metricPalette('Datos Turísticos')[5], note:'+100+' }
+          ]
         },
         {
           id:'non',
@@ -367,7 +442,14 @@
           url:'./_cdmdti/geojson_por_hoja/datos_no_ontologicos.geojson',
           visible:false,
           pane:'pane-non',
-          legend:[{ label:'Destinos', color:sheetColor('Datos No ontológicos'), note:'Registros JSON' }]
+          legend:[
+            { label:'0', color:'#edf2f7', note:'Sin registros' },
+            { label:'1-2', color:metricPalette('Datos No ontológicos')[0], note:'Muy bajo' },
+            { label:'3-5', color:metricPalette('Datos No ontológicos')[1], note:'Bajo' },
+            { label:'6-10', color:metricPalette('Datos No ontológicos')[2], note:'Medio' },
+            { label:'11-25', color:metricPalette('Datos No ontológicos')[3], note:'Alto' },
+            { label:'26+', color:metricPalette('Datos No ontológicos')[5], note:'Muy alto' }
+          ]
         },
         {
           id:'gest',
@@ -377,7 +459,14 @@
           url:'./_cdmdti/geojson_por_hoja/destinos_gestores.geojson',
           visible:false,
           pane:'pane-gest',
-          legend:[{ label:'Destinos', color:sheetColor('Destinos Gestores'), note:'Relación gestor' }]
+          legend:[
+            { label:'0', color:'#edf2f7', note:'Sin destinos' },
+            { label:'1', color:metricPalette('Destinos Gestores')[0], note:'Un destino' },
+            { label:'2-3', color:metricPalette('Destinos Gestores')[1], note:'Pocos' },
+            { label:'4-6', color:metricPalette('Destinos Gestores')[2], note:'Medio' },
+            { label:'7-10', color:metricPalette('Destinos Gestores')[3], note:'Alto' },
+            { label:'11+', color:metricPalette('Destinos Gestores')[5], note:'Muy alto' }
+          ]
         }
       ];
     }
@@ -567,7 +656,6 @@
     }
 
     function buildSheetLayer(def, data){
-      const color = sheetColor(def.label);
       const records = collectLayerRecords(data);
       records.forEach(rec => {
         const c = rec.properties?.c_ine ? String(rec.properties.c_ine) : '';
@@ -576,15 +664,7 @@
       const layer = L.geoJSON(data, {
         pane: def.pane,
         style: feature => {
-          const total = Number(feature?.properties?.total_puntos ?? feature?.properties?.['Número de Usuarios'] ?? feature?.properties?.['N Usuarios con Acceso'] ?? feature?.properties?.['Número de registros'] ?? feature?.properties?.['TRIPLETAS_GRAFO 30/07/2026'] ?? 0);
-          const opacity = def.opacity;
-          const fillOpacity = Math.max(0.08, opacity * 0.72);
-          const weight = 1;
-          if (total > 0) {
-            const idx = clamp(Math.floor(Math.log10(total + 1) * 2), 0, colorRamp.length - 1);
-            return { color, weight, opacity, fillColor: colorRamp[idx], fillOpacity };
-          }
-          return { color, weight, opacity, fillColor: color, fillOpacity };
+          return metricStyle(def, feature?.properties || {});
         },
         onEachFeature: (feature, layerItem) => {
           const p = feature.properties || {};
@@ -676,7 +756,11 @@
 
     function municipalityStyle(feature){
       const total = Number(feature?.properties?.total_puntos || 0);
-      return { weight:1, ...polygonFill(total) };
+      if (!total || total <= 0) {
+        return { weight:1, fillColor:'#edf2f7', fillOpacity:0.12, opacity:0.22, color:'#94a3b8' };
+      }
+      const idx = clamp(Math.floor(Math.log10(total + 1) * 2), 0, colorRamp.length - 1);
+      return { weight:1, fillColor: colorRamp[idx], fillOpacity:0.65, opacity:0.9, color: colorRamp[Math.max(0, idx - 1)] };
     }
 
     function municipalityPopup(feature, layer){
