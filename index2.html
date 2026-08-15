@@ -882,20 +882,22 @@
       provinceSelect.value = state.province;
       municipalitySelect.value = state.municipality;
       municipalitySelect.disabled = !state.province;
-      if (state.municipality && !municipalities.includes(state.municipality)) {
+      const selectedMunicipalityKey = normalizeKey(state.municipality);
+      const municipalityKeys = municipalities.map(normalizeKey);
+      if (state.municipality && !municipalityKeys.includes(selectedMunicipalityKey)) {
         state.municipality = '';
         municipalitySelect.value = '';
       }
     }
 
     function passes(d){
-      return (!state.province || d.provincia === state.province) && (!state.municipality || d.municipio === state.municipality);
+      return (!state.province || normalizeKey(d.provincia) === normalizeKey(state.province)) && (!state.municipality || normalizeKey(d.municipio) === normalizeKey(state.municipality));
     }
 
     function activeMunicipalityMatches(props){
       const name = props?.n_mun || props?.municipality || props?.name || '';
       const prov = props?.n_prov || props?.provincia || props?.province || '';
-      return (!state.province || prov === state.province) && (!state.municipality || name === state.municipality);
+      return (!state.province || normalizeKey(prov) === normalizeKey(state.province)) && (!state.municipality || normalizeKey(name) === normalizeKey(state.municipality));
     }
 
     function bars(targetId, entries, palette){
