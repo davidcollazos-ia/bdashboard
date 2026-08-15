@@ -918,10 +918,6 @@
       return cb ? cb.checked : true;
     }
 
-    function scopedDataset(chartId, visiblePoints){
-      return chartScope(chartId) ? visiblePoints : state.points;
-    }
-
     function switchInsightView(viewId){
       document.querySelectorAll('.insight-view').forEach(view => view.classList.toggle('active', view.id === `view-${viewId}`));
       document.querySelectorAll('.insight-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.view === viewId));
@@ -962,19 +958,22 @@
       document.getElementById('extraCountries').textContent = uniqueSorted(visiblePoints.map(d => d.municipio)).length;
       document.getElementById('extraProvinces').textContent = uniqueSorted(visiblePoints.map(d => d.provincia)).length;
 
-      const usageUsers = topMetricEntries(visiblePoints, p => p.total_puntos ?? 0, p => p.municipio || 'Sin nombre');
-      const usageModules = topMetricEntries(visiblePoints, p => (p.clase || '').length + (p.municipio || '').length, p => p.municipio || 'Sin nombre');
-      const usageDest = topMetricEntries(visiblePoints, p => p.provincia ? 1 : 0, p => p.provincia || 'Sin provincia');
-      const turEntries = topMetricEntries(visiblePoints, p => p.clase === 'Turístico' ? p.total_puntos ?? 0 : 0, p => p.clase || 'Sin clase');
-      const nonEntries = topMetricEntries(visiblePoints, p => p.clase !== 'Turístico' ? (p.total_puntos ?? 0) : 0, p => p.clase || 'Sin clase');
-      bars('chartUsageUsers', usageUsers, chartPalette);
-      bars('chartUsageModules', usageModules, chartPalette.slice().reverse());
-      bars('chartUsageDest', usageDest, [chartPalette[1], chartPalette[2], chartPalette[3], chartPalette[4], chartPalette[5], chartPalette[0]]);
+      const turDef = layerState.items.find(d => d.id === 'tur');
+      const nonDef = layerState.items.find(d => d.id === 'non');
+      const turFeatures = turDef?.data?.features || [];
+      const nonFeatures = nonDef?.data?.features || [];
+      const turEntries = topMetricEntries(
+        turFeatures,
+        f => extractNumericMetric(turDef, f.properties || {}),
+        f => extractFeatureLabel(f.properties)
+      );
+      const nonEntries = topMetricEntries(
+        nonFeatures,
+        f => extractNumericMetric(nonDef, f.properties || {}),
+        f => extractFeatureLabel(f.properties)
+      );
       bars('chartTypesTur', turEntries, [chartPalette[3], chartPalette[2], chartPalette[1], chartPalette[0], chartPalette[4], chartPalette[5]]);
       bars('chartTypesNon', nonEntries, [chartPalette[5], chartPalette[4], chartPalette[3], chartPalette[2], chartPalette[1], chartPalette[0]]);
-      setSummaryChips('summaryUsageUsers', usageUsers.slice(0, 3));
-      setSummaryChips('summaryUsageModules', usageModules.slice(0, 3));
-      setSummaryChips('summaryUsageDest', usageDest.slice(0, 3));
       setSummaryChips('summaryTypesTur', turEntries.slice(0, 3));
       setSummaryChips('summaryTypesNon', nonEntries.slice(0, 3));
     }
