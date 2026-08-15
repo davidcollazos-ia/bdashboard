@@ -1,0 +1,1 @@
+﻿{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"codigo_ine":"00000000000","nombre_municipio":"Municipio Demo","codigo_provincia":"99","codigo_ccaa":"99","municipio_norm":"municipio-demo","id_comarca":"comarca-demo"},"geometry":{"type":"Point","coordinates":[-3.7,40.2]}}]}

@@ -1,0 +1,1 @@
+﻿{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"codigo_ccaa":"99","nombre_ccaa":"Comunidad Demo","ccaa_norm":"comunidad-demo"},"geometry":{"type":"Polygon","coordinates":[[[-4,40],[-3,40],[-3,41],[-4,41],[-4,40]]]}}]}

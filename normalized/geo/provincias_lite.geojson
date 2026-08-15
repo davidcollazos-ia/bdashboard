@@ -1,0 +1,1 @@
+﻿{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"codigo_provincia":"99","nombre_provincia":"Provincia Demo","codigo_ccaa":"99","provincia_norm":"provincia-demo"},"geometry":{"type":"Polygon","coordinates":[[[-3.8,40.1],[-3.6,40.1],[-3.6,40.3],[-3.8,40.3],[-3.8,40.1]]]}}]}

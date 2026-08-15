@@ -1,0 +1,2 @@
+﻿codigo_provincia,nombre_provincia,codigo_ccaa,geometry,provincia_norm
+99,Provincia Demo,99,"{\"type\":\"Polygon\",\"coordinates\":[[[-3.8,40.1],[-3.6,40.1],[-3.6,40.3],[-3.8,40.3],[-3.8,40.1]]]}",provincia-demo

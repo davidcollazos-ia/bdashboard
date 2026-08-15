@@ -1,0 +1,2 @@
+﻿codigo_ine,nombre_municipio,codigo_provincia,codigo_ccaa,geometry,municipio_norm,id_comarca
+00000000000,Municipio Demo,99,99,"{\"type\":\"Point\",\"coordinates\":[-3.7,40.2]}",municipio-demo,comarca-demo
