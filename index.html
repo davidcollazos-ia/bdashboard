@@ -232,16 +232,16 @@
       <div class="insight-view" id="view-pid-usage">
         <div class="hero"><h1>Información del uso de la PID</h1></div>
         <div class="insights">
-          <div class="card" id="cardUsageUsers"><div class="card-header" onclick="toggleCard('cardUsageUsers')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Usuarios por municipio</h3></div></div><div class="card-body"><div class="spark" id="chartUsageUsers"></div><div class="mini-summary" id="summaryUsageUsers"></div></div></div>
-          <div class="card" id="cardUsageModules"><div class="card-header" onclick="toggleCard('cardUsageModules')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Módulos comunes</h3></div></div><div class="card-body"><div class="spark" id="chartUsageModules"></div><div class="mini-summary" id="summaryUsageModules"></div></div></div>
-          <div class="card" id="cardUsageDest"><div class="card-header" onclick="toggleCard('cardUsageDest')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Destinos gestores</h3></div></div><div class="card-body"><div class="spark" id="chartUsageDest"></div><div class="mini-summary" id="summaryUsageDest"></div></div></div>
+          <div class="card" id="cardUsageUsers"><div class="card-header" onclick="toggleCard('cardUsageUsers')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Usuarios por municipio</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="usageUsers" checked> Vista</label></div><div class="card-body"><div class="spark" id="chartUsageUsers"></div><div class="mini-summary" id="summaryUsageUsers"></div></div></div>
+          <div class="card" id="cardUsageModules"><div class="card-header" onclick="toggleCard('cardUsageModules')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Módulos comunes</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="usageModules" checked> Vista</label></div><div class="card-body"><div class="spark" id="chartUsageModules"></div><div class="mini-summary" id="summaryUsageModules"></div></div></div>
+          <div class="card" id="cardUsageDest"><div class="card-header" onclick="toggleCard('cardUsageDest')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Destinos gestores</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="usageDest" checked> Vista</label></div><div class="card-body"><div class="spark" id="chartUsageDest"></div><div class="mini-summary" id="summaryUsageDest"></div></div></div>
         </div>
       </div>
       <div class="insight-view" id="view-pid-types">
         <div class="hero"><h1>Información sobre tipologías de datos</h1></div>
         <div class="insights">
-          <div class="card" id="cardTypesTur"><div class="card-header" onclick="toggleCard('cardTypesTur')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Datos turísticos</h3></div></div><div class="card-body"><div class="spark" id="chartTypesTur"></div><div class="mini-summary" id="summaryTypesTur"></div></div></div>
-          <div class="card" id="cardTypesNon"><div class="card-header" onclick="toggleCard('cardTypesNon')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Datos no ontológicos</h3></div></div><div class="card-body"><div class="spark" id="chartTypesNon"></div><div class="mini-summary" id="summaryTypesNon"></div></div></div>
+          <div class="card" id="cardTypesTur"><div class="card-header" onclick="toggleCard('cardTypesTur')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Datos turísticos</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="typesTur" checked> Vista</label></div><div class="card-body"><div class="spark" id="chartTypesTur"></div><div class="mini-summary" id="summaryTypesTur"></div></div></div>
+          <div class="card" id="cardTypesNon"><div class="card-header" onclick="toggleCard('cardTypesNon')"><div class="card-title-wrap"><span class="card-toggle" aria-hidden="true"></span><h3>Datos no ontológicos</h3></div><label class="card-mode" onclick="event.stopPropagation()"><input type="checkbox" class="chart-scope" data-chart="typesNon" checked> Vista</label></div><div class="card-body"><div class="spark" id="chartTypesNon"></div><div class="mini-summary" id="summaryTypesNon"></div></div></div>
         </div>
       </div>
     </div>
@@ -918,6 +918,10 @@
       return cb ? cb.checked : true;
     }
 
+    function scopedDataset(chartId, visiblePoints){
+      return chartScope(chartId) ? visiblePoints : state.points;
+    }
+
     function switchInsightView(viewId){
       document.querySelectorAll('.insight-view').forEach(view => view.classList.toggle('active', view.id === `view-${viewId}`));
       document.querySelectorAll('.insight-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.view === viewId));
@@ -963,11 +967,16 @@
       const turDef = layerState.items.find(d => d.id === 'tur');
       const nonDef = layerState.items.find(d => d.id === 'non');
       const gestDef = layerState.items.find(d => d.id === 'gest');
-      const usageUsers = topMetricEntries(usoDef?.data?.features || [], f => extractNumericMetric(usoDef, f.properties || {}), f => extractFeatureLabel(f.properties));
-      const usageModules = topMetricEntries(modsDef?.data?.features || [], f => extractNumericMetric(modsDef, f.properties || {}), f => extractFeatureLabel(f.properties));
-      const usageDest = topMetricEntries(gestDef?.data?.features || [], f => extractNumericMetric(gestDef, f.properties || {}), f => extractFeatureLabel(f.properties));
-      const turEntries = topMetricEntries(turDef?.data?.features || [], f => extractNumericMetric(turDef, f.properties || {}), f => extractFeatureLabel(f.properties));
-      const nonEntries = topMetricEntries(nonDef?.data?.features || [], f => extractNumericMetric(nonDef, f.properties || {}), f => extractFeatureLabel(f.properties));
+      const usageScope = scopedDataset('usageUsers', visiblePoints);
+      const modulesScope = scopedDataset('usageModules', visiblePoints);
+      const destScope = scopedDataset('usageDest', visiblePoints);
+      const turScope = scopedDataset('typesTur', visiblePoints);
+      const nonScope = scopedDataset('typesNon', visiblePoints);
+      const usageUsers = topMetricEntries(usoDef?.data?.features || [], f => extractNumericMetric(usoDef, f.properties || {}), f => extractFeatureLabel(f.properties)).filter(entry => !chartScope('usageUsers') || usageScope.some(p => extractFeatureLabel(p) === entry[0]));
+      const usageModules = topMetricEntries(modsDef?.data?.features || [], f => extractNumericMetric(modsDef, f.properties || {}), f => extractFeatureLabel(f.properties)).filter(entry => !chartScope('usageModules') || modulesScope.some(p => extractFeatureLabel(p) === entry[0]));
+      const usageDest = topMetricEntries(gestDef?.data?.features || [], f => extractNumericMetric(gestDef, f.properties || {}), f => extractFeatureLabel(f.properties)).filter(entry => !chartScope('usageDest') || destScope.some(p => extractFeatureLabel(p) === entry[0]));
+      const turEntries = topMetricEntries(turDef?.data?.features || [], f => extractNumericMetric(turDef, f.properties || {}), f => extractFeatureLabel(f.properties)).filter(entry => !chartScope('typesTur') || turScope.some(p => extractFeatureLabel(p) === entry[0]));
+      const nonEntries = topMetricEntries(nonDef?.data?.features || [], f => extractNumericMetric(nonDef, f.properties || {}), f => extractFeatureLabel(f.properties)).filter(entry => !chartScope('typesNon') || nonScope.some(p => extractFeatureLabel(p) === entry[0]));
       bars('chartUsageUsers', usageUsers, chartPalette);
       bars('chartUsageModules', usageModules, chartPalette.slice().reverse());
       bars('chartUsageDest', usageDest, [chartPalette[1], chartPalette[2], chartPalette[3], chartPalette[4], chartPalette[5], chartPalette[0]]);
