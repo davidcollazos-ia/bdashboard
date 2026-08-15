@@ -78,22 +78,24 @@
     .layer-card.dragging{opacity:.55;transform:scale(.995)}
     .layer-head{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #f0e5ef;background:linear-gradient(180deg,#fffdfd,#fbf6fb);cursor:grab}
     .layer-head:active{cursor:grabbing}
-    .layer-grip{font-size:16px;line-height:1;color:var(--muted);user-select:none}
+    .layer-grip{font-size:0;line-height:1;color:var(--muted);user-select:none;width:16px;text-align:center}
+    .layer-grip::before{content:'::: ';letter-spacing:-1px;font-size:16px;display:block}
     .layer-meta{min-width:0;flex:1;display:flex;align-items:center;gap:8px}
     .layer-name{font-weight:800;font-size:12px;color:var(--ink);line-height:1.2;flex:1;min-width:0}
     .layer-body{padding:8px 10px 9px;display:grid;gap:7px}
     .layer-toggle{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#334155;white-space:nowrap}
     .layer-legend{border-top:1px dashed #eadfeb;padding-top:8px;display:none;gap:6px}
     .layer-card.expanded .layer-legend{display:grid}
-    .legend-btn{border:1px solid #e6d8e4;background:#fff;border-radius:999px;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--brand);cursor:pointer;flex:0 0 auto;padding:0;line-height:1}
+    .legend-btn{border:1px solid #e6d8e4;background:#fff;border-radius:999px;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:0;font-weight:700;color:var(--brand);cursor:pointer;flex:0 0 auto;padding:0;line-height:1;position:relative}
+    .legend-btn::before{content:'';width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid var(--brand)}
     .insights{padding:14px;display:flex;flex-direction:column;gap:12px;flex:0 0 auto;min-height:0}
     .card{border:1px solid var(--line);border-radius:16px;background:#fffdf9;overflow:hidden;box-shadow:0 8px 20px rgba(31,41,55,.04)}
     .card-header{padding:11px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer;background:linear-gradient(180deg,#fbf7fb,#f2e7f3);border-bottom:1px solid var(--line)}
     .card-header h3{margin:0;font-size:13px;color:var(--ink);font-weight:800;letter-spacing:.01em}
     .card-title-wrap{display:flex;align-items:center;gap:8px;min-width:0;flex:1}
-    .card-toggle{font-size:0;color:transparent;line-height:1;display:flex;align-items:center;justify-content:center;width:18px;height:18px;flex:0 0 auto}
-    .card-toggle::before{content:'âŒ„';font-size:18px;line-height:1;color:var(--muted);transform:translateY(-1px);transition:transform .15s ease, color .15s ease}
-    .card:not(.collapsed) .card-toggle::before{content:'âŒƒ';transform:translateY(1px)}
+    .card-toggle{font-size:0;color:transparent;line-height:1;display:flex;align-items:center;justify-content:center;width:18px;height:18px;flex:0 0 auto;position:relative}
+    .card-toggle::before{content:'';width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid var(--muted);transition:transform .15s ease,border-color .15s ease}
+    .card:not(.collapsed) .card-toggle::before{transform:rotate(180deg)}
     .card-header:hover .card-toggle::before{color:var(--brand)}
     .card-body{padding:12px;overflow:visible}
     .card.collapsed .card-body{display:none}
@@ -863,6 +865,48 @@
         .slice(0, 6);
     }
 
+    function extractFeatureLabel(props){
+      const p = props || {};
+      return firstNonEmpty(
+        p.n_mun,
+        p.nombre,
+        p.name,
+        p.municipio,
+        p.titulo,
+        p.title,
+        p['Nombre Destino'],
+        p['NOMBRE_DESTINO'],
+        p['Nombre Destino Gestor'],
+        'Sin nombre'
+      );
+    }
+
+    function extractNumericMetric(def, props){
+      const p = props || {};
+      const numericValues = Object.entries(p)
+        .filter(([k, v]) => typeof v === 'number' || (typeof v === 'string' && v.trim() !== '' && Number.isFinite(Number(String(v).replace(',', '.').replace(/\s+/g, '')))))
+        .map(([, v]) => parseNum(v))
+        .filter(v => Number.isFinite(v));
+      if (def.id === 'uso') {
+        return parseNum(p['NÚmero de Usuarios']) ?? parseNum(p['Número de Usuarios']) ?? parseNum(p['NUsuarios']) ?? numericValues[0] ?? 0;
+      }
+      if (def.id === 'mods') {
+        return parseNum(p['N Usuarios con Acceso']) ?? parseNum(p['Soluciones digitales activas']) ?? numericValues[0] ?? 0;
+      }
+      if (def.id === 'tur') {
+        const last = parseNum(p['TRIPLETAS_GRAFO 30/07/2026']) ?? parseNum(p['Tripletas Grado 30/07/2026']) ?? 0;
+        const prev = parseNum(p['TRIPLETAS_GRAFO 09/07/2026']) ?? 0;
+        return last - prev;
+      }
+      if (def.id === 'non') {
+        return parseNum(p['Número de registros']) ?? parseNum(p['N registros']) ?? numericValues[0] ?? 0;
+      }
+      if (def.id === 'gest') {
+        return parseNum(p['Número de destinos gestionados']) ?? parseNum(p['N destinos gestionados']) ?? parseNum(p['Número de destinos']) ?? numericValues[0] ?? 0;
+      }
+      return numericValues[0] ?? 0;
+    }
+
     function setSummaryChips(targetId, entries, emptyText = 'Sin datos'){
       const el = document.getElementById(targetId);
       if (!el) return;
@@ -919,11 +963,11 @@
       const turDef = layerState.items.find(d => d.id === 'tur');
       const nonDef = layerState.items.find(d => d.id === 'non');
       const gestDef = layerState.items.find(d => d.id === 'gest');
-      const usageUsers = topMetricEntries(usoDef?.data?.features || [], f => metricValue(usoDef, f.properties || {}), f => f.properties?.n_mun || f.properties?.name || 'Sin nombre');
-      const usageModules = topMetricEntries(modsDef?.data?.features || [], f => metricValue(modsDef, f.properties || {}), f => f.properties?.n_mun || f.properties?.name || 'Sin nombre');
-      const usageDest = topMetricEntries(gestDef?.data?.features || [], f => metricValue(gestDef, f.properties || {}), f => f.properties?.n_mun || f.properties?.name || 'Sin nombre');
-      const turEntries = topMetricEntries(turDef?.data?.features || [], f => metricValue(turDef, f.properties || {}), f => f.properties?.n_mun || f.properties?.name || 'Sin nombre');
-      const nonEntries = topMetricEntries(nonDef?.data?.features || [], f => metricValue(nonDef, f.properties || {}), f => f.properties?.n_mun || f.properties?.name || 'Sin nombre');
+      const usageUsers = topMetricEntries(usoDef?.data?.features || [], f => extractNumericMetric(usoDef, f.properties || {}), f => extractFeatureLabel(f.properties));
+      const usageModules = topMetricEntries(modsDef?.data?.features || [], f => extractNumericMetric(modsDef, f.properties || {}), f => extractFeatureLabel(f.properties));
+      const usageDest = topMetricEntries(gestDef?.data?.features || [], f => extractNumericMetric(gestDef, f.properties || {}), f => extractFeatureLabel(f.properties));
+      const turEntries = topMetricEntries(turDef?.data?.features || [], f => extractNumericMetric(turDef, f.properties || {}), f => extractFeatureLabel(f.properties));
+      const nonEntries = topMetricEntries(nonDef?.data?.features || [], f => extractNumericMetric(nonDef, f.properties || {}), f => extractFeatureLabel(f.properties));
       bars('chartUsageUsers', usageUsers, chartPalette);
       bars('chartUsageModules', usageModules, chartPalette.slice().reverse());
       bars('chartUsageDest', usageDest, [chartPalette[1], chartPalette[2], chartPalette[3], chartPalette[4], chartPalette[5], chartPalette[0]]);
