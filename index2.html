@@ -44,7 +44,8 @@
     .insight-btn .ico{font-size:18px;line-height:1}
     .insight-btn:hover{transform:translateX(-2px);box-shadow:0 10px 18px rgba(31,41,55,.08);border-color:#e9d8e7}
     .insight-btn.active{background:linear-gradient(180deg,rgba(193,61,131,.12),rgba(245,158,11,.10));border-color:rgba(193,61,131,.22);color:var(--brand)}
-    .insight-panel{position:absolute;right:74px;top:0;width:360px;height:calc(100vh - 32px);display:flex;flex-direction:column;overflow-y:auto !important;overflow-x:hidden;overscroll-behavior:contain;scrollbar-gutter:stable;background:var(--panel-strong);border-radius:var(--radius-lg);box-shadow:var(--shadow);border:1px solid var(--line);backdrop-filter:blur(12px)}
+    .insight-panel{position:absolute;right:74px;top:0;width:360px;height:calc(100vh - 32px);display:none;flex-direction:column;overflow-y:auto !important;overflow-x:hidden;overscroll-behavior:contain;scrollbar-gutter:stable;background:var(--panel-strong);border-radius:var(--radius-lg);box-shadow:var(--shadow);border:1px solid var(--line);backdrop-filter:blur(12px)}
+    .insight-panel.active{display:flex}
     .insight-view{display:none;flex-direction:column;min-height:100%}
     .insight-view.active{display:flex;min-height:100%}
     .hero{padding:20px 18px 24px;background:
@@ -230,7 +231,7 @@
 
     <div class="panel insightbar">
     <div class="insight-rail">
-      <button type="button" class="insight-btn active" data-view="pid-data" onclick="window.pidSwitchInsightView('pid-data')" title="Datos que contiene la PID">
+      <button type="button" class="insight-btn" data-view="pid-data" onclick="window.pidSwitchInsightView('pid-data')" title="Datos que contiene la PID">
         <span class="ico">◫</span>
         <span>Contenido</span>
       </button>
@@ -244,7 +245,7 @@
       </button>
     </div>
     <div class="insight-panel">
-      <div class="insight-view active" id="view-pid-data">
+      <div class="insight-view" id="view-pid-data">
         <div class="hero"><h1>Datos que contiene la PID</h1></div>
         <div class="insights">
           <div class="card collapsed" id="cardDiag">
@@ -997,8 +998,17 @@
     }
 
     function switchInsightView(viewId){
-      document.querySelectorAll('.insight-view').forEach(view => view.classList.toggle('active', view.id === `view-${viewId}`));
-      document.querySelectorAll('.insight-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.view === viewId));
+      const panel = document.querySelector('.insight-panel');
+      const targetId = `view-${viewId}`;
+      const view = document.getElementById(targetId);
+      const willOpen = !view.classList.contains('active');
+      document.querySelectorAll('.insight-view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.insight-btn').forEach(btn => btn.classList.remove('active'));
+      panel.classList.toggle('active', willOpen);
+      if (willOpen) {
+        view.classList.add('active');
+        document.querySelector(`.insight-btn[data-view="${viewId}"]`)?.classList.add('active');
+      }
     }
 
     function renderInsights(visiblePoints){
