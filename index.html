@@ -1484,17 +1484,25 @@
       const defs = getLayerDefs();
       layerState.items = defs;
 
-      const [munData, ptsData, usoData, modsData, turData, nonData, gestData, comData, cmpData] = await Promise.all([
-        loadGeoJson(defs[0].url),
-        loadGeoJson(defs[1].url),
-        loadCsv(defs[2].url),
-        loadCsv(defs[3].url),
-        loadCsv(defs[4].url),
-        loadCsv(defs[5].url),
-        loadCsv(defs[6].url),
-        loadCsv(defs[7].url),
-        loadCsv(defs[8].url)
-      ]);
+      const loaders = [
+        ['municipios', defs[0].url, loadGeoJson(defs[0].url)],
+        ['pois', defs[1].url, loadGeoJson(defs[1].url)],
+        ['uso', defs[2].url, loadCsv(defs[2].url)],
+        ['mods', defs[3].url, loadCsv(defs[3].url)],
+        ['tur', defs[4].url, loadCsv(defs[4].url)],
+        ['non', defs[5].url, loadCsv(defs[5].url)],
+        ['gest', defs[6].url, loadCsv(defs[6].url)],
+        ['com', defs[7].url, loadCsv(defs[7].url)],
+        ['cmp', defs[8].url, loadCsv(defs[8].url)]
+      ];
+      const results = await Promise.allSettled(loaders.map(item => item[2]));
+      results.forEach((res, idx) => {
+        if (res.status === 'rejected') console.error('Carga fallida', loaders[idx][0], loaders[idx][1], res.reason);
+      });
+      if (results.some(res => res.status === 'rejected')) {
+        throw new Error('No se pudieron cargar uno o varios archivos del demo público');
+      }
+      const [munData, ptsData, usoData, modsData, turData, nonData, gestData, comData, cmpData] = results.map(r => r.value);
       defs[2].data = usoData;
       defs[3].data = modsData;
       defs[4].data = turData;
